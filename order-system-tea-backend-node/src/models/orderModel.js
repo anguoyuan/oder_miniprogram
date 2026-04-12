@@ -1,0 +1,283 @@
+const { pool } = require('../config/database');
+const moment = require('moment');
+const { normalizePagination } = require('../utils/pagination');
+
+class OrderModel {
+  /**
+   * 生成订单号
+   */
+  static generateOrderNo() {
+    return moment().format('YYYYMMDDHHmmss') + Math.floor(Math.random() * 10000);
+  }
+  
+  /**
+   * 创建订单
+   */
+  static async create(order) {
+    const orderNo = this.generateOrderNo();
+    
+    // 检查是否有 address_id 字段
+    let sql, params;
+    const hasAddressId = order.addressId !== undefined && order.addressId !== null;
+    
+    if (hasAddressId) {
+      sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, remark, address, phone, address_id) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      params = [
+        orderNo,
+        order.userId,
+        order.totalPrice,
+        order.orderType || 'takeaway',
+        'pending',
+        order.remark || null,
+        order.address || null,
+        order.phone || null,
+        order.addressId
+      ];
+    } else {
+      sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, remark, address, phone) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      params = [
+        orderNo,
+        order.userId,
+        order.totalPrice,
+        order.orderType || 'takeaway',
+        'pending',
+        order.remark || null,
+        order.address || null,
+        order.phone || null
+      ];
+    }
+    
+    const [result] = await pool.execute(sql, params);
+    return {
+      orderId: result.insertId,
+      orderNo
+    };
+  }
+  
+  /**
+   * 创建订单明细
+   */
+  static async createOrderItems(orderId, items) {
+    const values = items.map(item => [
+      orderId,
+      item.productId,
+      item.productName || '',
+      item.productImage || '',
+      item.price || 0,
+      item.quantity || 1,
+      item.specs || null
+    ]);
+    
+    await pool.query(
+      `INSERT INTO order_item (order_id, product_id, product_name, product_image, price, quantity, specs) 
+       VALUES ?`,
+      [values]
+    );
+  }
+  
+  /**
+   * 根据ID查找订单
+   */
+  static async findById(id) {
+    const [rows] = await pool.execute(
+      'SELECT * FROM orders WHERE id = ?',
+      [id]
+    );
+    return rows[0];
+  }
+  
+  /**
+   * 获取订单详情（包含订单明细）
+   */
+  static async getDetail(orderId) {
+    const [orderRows] = await pool.execute(
+      'SELECT * FROM orders WHERE id = ?',
+      [orderId]
+    );
+    
+    if (orderRows.length === 0) return null;
+    
+    const [itemRows] = await pool.execute(
+      'SELECT * FROM order_item WHERE order_id = ?',
+      [orderId]
+    );
+    
+    return {
+      ...orderRows[0],
+      items: itemRows
+    };
+  }
+  
+  /**
+   * 获取用户订单列表
+   */
+  static async getUserOrders(userId, status, page, pageSize) {
+    // 使用分页工具确保参数是整数类型（MySQL兼容性）
+    const { limit, offset } = normalizePagination(page, pageSize);
+    
+    // 直接拼接SQL（参数已经过类型转换，安全）
+    let sql = `SELECT * FROM orders WHERE user_id = ${userId}`;
+    let countSql = `SELECT COUNT(*) as total FROM orders WHERE user_id = ${userId}`;
+    
+    if (status) {
+      const safeStatus = pool.escape(status);
+      sql += ` AND status = ${safeStatus}`;
+      countSql += ` AND status = ${safeStatus}`;
+    }
+    
+    sql += ` ORDER BY create_time DESC LIMIT ${limit} OFFSET ${offset}`;
+    
+    const [rows] = await pool.query(sql);
+    const [countRows] = await pool.query(countSql);
+    
+    // 为每个订单查询订单明细
+    const orders = await Promise.all(rows.map(async (order) => {
+      const [items] = await pool.execute(
+        'SELECT * FROM order_item WHERE order_id = ?',
+        [order.id]
+      );
+      return {
+        ...order,
+        items: items
+      };
+    }));
+    
+    return {
+      records: orders,
+      total: countRows[0].total
+    };
+  }
+  
+  /**
+   * 获取所有订单列表（管理端）
+   */
+  static async getAllOrders(status, page, pageSize) {
+    // 使用分页工具确保参数是整数类型（MySQL兼容性）
+    const { limit, offset } = normalizePagination(page, pageSize);
+    
+    // 直接拼接SQL（参数已经过类型转换，安全）
+    let sql = 'SELECT o.*, u.nickname as userNickname, u.avatar as userAvatar FROM orders o LEFT JOIN user u ON o.user_id = u.id';
+    let countSql = 'SELECT COUNT(*) as total FROM orders';
+    
+    if (status) {
+      const safeStatus = pool.escape(status);
+      sql += ` WHERE o.status = ${safeStatus}`;
+      countSql += ` WHERE status = ${safeStatus}`;
+    }
+    
+    sql += ` ORDER BY o.create_time DESC LIMIT ${limit} OFFSET ${offset}`;
+    
+    const [rows] = await pool.query(sql);
+    const [countRows] = await pool.query(countSql);
+    
+    // 为每个订单查询订单明细
+    const orders = await Promise.all(rows.map(async (order) => {
+      const [items] = await pool.execute(
+        'SELECT * FROM order_item WHERE order_id = ?',
+        [order.id]
+      );
+      return {
+        ...order,
+        items: items
+      };
+    }));
+    
+    return {
+      records: orders,
+      total: countRows[0].total
+    };
+  }
+  
+  /**
+   * 更新订单状态
+   */
+  static async updateStatus(orderId, status) {
+    const [result] = await pool.execute(
+      'UPDATE orders SET status = ? WHERE id = ?',
+      [status, orderId]
+    );
+    return result.affectedRows > 0;
+  }
+  
+  /**
+   * 取消订单
+   */
+  static async cancel(orderId, userId) {
+    const [result] = await pool.execute(
+      'UPDATE orders SET status = "cancelled" WHERE id = ? AND user_id = ? AND status = "pending"',
+      [orderId, userId]
+    );
+    return result.affectedRows > 0;
+  }
+  
+  /**
+   * 获取订单统计
+   */
+  static async getStats() {
+    // 查询今日订单统计
+    const [todayStats] = await pool.execute(
+      `SELECT 
+         COUNT(*) as orderCount, 
+         COALESCE(SUM(total_price), 0) as totalAmount 
+       FROM orders 
+       WHERE DATE(create_time) = CURDATE() AND status != 'cancelled'`
+    );
+    
+    // 查询总订单统计
+    const [totalStats] = await pool.execute(
+      `SELECT 
+         COUNT(*) as orderCount, 
+         COALESCE(SUM(total_price), 0) as totalAmount 
+       FROM orders 
+       WHERE status != 'cancelled'`
+    );
+    
+    // 统计各状态订单数（只统计当前实时状态，不限日期）
+    const [statusStats] = await pool.execute(
+      `SELECT 
+         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+         SUM(CASE WHEN status = 'preparing' THEN 1 ELSE 0 END) as preparing,
+         SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) as ready
+       FROM orders`
+    );
+    
+    // 统计今日完成订单和营业额
+    const [todayCompletedStats] = await pool.execute(
+      `SELECT 
+         COUNT(*) as todayCompleted,
+         COALESCE(SUM(total_price), 0) as todayRevenue
+       FROM orders 
+       WHERE status = 'completed' 
+       AND DATE(create_time) = CURDATE()`
+    );
+    
+    console.log('📊 订单统计数据:', {
+      today: todayStats[0],
+      completed: todayCompletedStats[0],
+      status: statusStats[0]
+    });
+    
+    return {
+      today: {
+        orderCount: parseInt(todayStats[0].orderCount) || 0,
+        totalAmount: parseFloat(todayStats[0].totalAmount) || 0
+      },
+      total: {
+        orderCount: parseInt(totalStats[0].orderCount) || 0,
+        totalAmount: parseFloat(totalStats[0].totalAmount) || 0
+      },
+      status: {
+        pending: parseInt(statusStats[0].pending) || 0,
+        preparing: parseInt(statusStats[0].preparing) || 0,
+        ready: parseInt(statusStats[0].ready) || 0,
+        todayCompleted: parseInt(todayCompletedStats[0].todayCompleted) || 0,
+        todayRevenue: parseFloat(todayCompletedStats[0].todayRevenue) || 0
+      }
+    };
+  }
+}
+
+module.exports = OrderModel;
+

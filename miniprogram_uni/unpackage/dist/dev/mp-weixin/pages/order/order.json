@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "点单",
+  "navigationStyle": "default",
+  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#ffffff",
+  "usingComponents": {}
+}

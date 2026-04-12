@@ -1,0 +1,622 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* pages/lottery/lottery.wxss */
+.lottery-container {
+    background: linear-gradient(135deg, #aad08f, #f7931e);
+    min-height: 100vh;
+}
+.main-content {
+    padding-top: 10rpx;
+    padding-bottom: 20rpx;
+}
+/* 积分信息 */
+.points-section {
+    margin: 20rpx;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+}
+.points-info {
+    margin-bottom: 10rpx;
+}
+.points-label {
+    font-size: 28rpx;
+    color: #666;
+    margin-right: 20rpx;
+}
+.points-value {
+    font-size: 48rpx;
+    font-weight: bold;
+    color: #aad08f;
+}
+.points-desc {
+    font-size: 24rpx;
+    color: #999;
+}
+/* 转盘抽奖 */
+.lottery-section {
+    margin: 20rpx;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+}
+.lottery-title {
+    margin-bottom: 40rpx;
+}
+.title-text {
+    font-size: 36rpx;
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 10rpx;
+}
+.title-desc {
+    font-size: 24rpx;
+    color: #666;
+}
+/* 转盘 */
+.lottery-wheel {
+    position: relative;
+    width: 500rpx;
+    height: 500rpx;
+    margin: 0 auto;
+}
+.wheel-bg {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: relative;
+    background: conic-gradient(
+        #aad08f 0deg 45deg,
+        #4caf50 45deg 90deg,
+        #2196f3 90deg 135deg,
+        #ff9800 135deg 180deg,
+        #9c27b0 180deg 225deg,
+        #607d8b 225deg 270deg,
+        #e91e63 270deg 315deg,
+        #795548 315deg 360deg
+    );
+    transition: -webkit-transform 3s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: transform 3s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: transform 3s cubic-bezier(0.23, 1, 0.32, 1), -webkit-transform 3s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 0 20rpx rgba(0, 0, 0, 0.3);
+}
+.prize-item {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 250rpx;
+    height: 250rpx;
+    -webkit-transform-origin: 50% 100%;
+            transform-origin: 50% 100%;
+    margin-left: -125rpx;
+}
+.prize-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 120rpx;
+    padding-top: 60rpx;
+    width: 100%;
+}
+.prize-text {
+    font-size: 28rpx;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2rpx 2rpx 4rpx rgba(0, 0, 0, 0.6);
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120rpx;
+}
+/* 转盘指针 */
+.wheel-pointer {
+    position: absolute;
+    top: -20rpx;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 30rpx solid transparent;
+    border-right: 30rpx solid transparent;
+    border-bottom: 60rpx solid #fff;
+    z-index: 10;
+    -webkit-filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.3));
+            filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.3));
+}
+/* 开始按钮 */
+.start-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #aad08f, #f7931e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28rpx;
+    font-weight: bold;
+    color: #fff;
+    box-shadow: 0 4rpx 12rpx rgba(255, 107, 53, 0.4);
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+.start-btn:active {
+    -webkit-transform: translate(-50%, -50%) scale(0.95);
+            transform: translate(-50%, -50%) scale(0.95);
+}
+.start-btn.spinning {
+    background: #ccc;
+    pointer-events: none;
+}
+/* 奖品说明 */
+.prizes-section,
+.records-section {
+    margin: 20rpx;
+    background: rgba(255, 255, 255, 0.95);
+}
+.section-title {
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20rpx;
+    text-align: center;
+}
+.prizes-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20rpx;
+}
+.prize-desc {
+    display: flex;
+    align-items: center;
+    padding: 15rpx;
+    border-radius: 8rpx;
+    background-color: #f8f8f8;
+}
+.prize-color {
+    width: 20rpx;
+    height: 20rpx;
+    border-radius: 50%;
+    margin-right: 12rpx;
+}
+.prize-color-0 {
+    background-color: #aad08f;
+}
+.prize-color-1 {
+    background-color: #4caf50;
+}
+.prize-color-2 {
+    background-color: #2196f3;
+}
+.prize-color-3 {
+    background-color: #ff9800;
+}
+.prize-color-4 {
+    background-color: #9c27b0;
+}
+.prize-color-5 {
+    background-color: #607d8b;
+}
+.prize-color-6 {
+    background-color: #e91e63;
+}
+.prize-color-7 {
+    background-color: #795548;
+}
+.prize-name {
+    flex: 1;
+    font-size: 26rpx;
+    color: #333;
+}
+.prize-probability {
+    font-size: 24rpx;
+    color: #666;
+}
+/* 中奖记录 */
+.records-list {
+    max-height: 400rpx;
+    overflow-y: auto;
+}
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20rpx 0;
+    border-bottom: 1rpx solid #f0f0f0;
+}
+.record-item:last-child {
+    border-bottom: none;
+}
+.record-time {
+    font-size: 24rpx;
+    color: #999;
+}
+.record-prize {
+    font-size: 26rpx;
+    color: #aad08f;
+    font-weight: bold;
+}
+/* 结果弹窗 */
+.result-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.result-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+.result-content {
+    background-color: #fff;
+    border-radius: 20rpx;
+    width: 600rpx;
+    max-width: 90vw;
+    -webkit-transform: scale(0.7);
+            transform: scale(0.7);
+    transition: -webkit-transform 0.3s ease;
+    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, -webkit-transform 0.3s ease;
+}
+.result-modal.show .result-content {
+    -webkit-transform: scale(1);
+            transform: scale(1);
+}
+.result-header {
+    position: relative;
+    padding: 40rpx 60rpx 20rpx;
+    text-align: center;
+    border-bottom: 1rpx solid #f0f0f0;
+}
+.result-title {
+    font-size: 36rpx;
+    font-weight: bold;
+    color: #333;
+}
+.close-result {
+    position: absolute;
+    top: 20rpx;
+    right: 30rpx;
+    width: 60rpx;
+    height: 60rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40rpx;
+    color: #999;
+}
+.result-body {
+    padding: 60rpx;
+    text-align: center;
+}
+.result-icon {
+    width: 120rpx;
+    height: 120rpx;
+    margin-bottom: 30rpx;
+}
+.result-text {
+    font-size: 32rpx;
+    color: #333;
+    line-height: 1.5;
+}
+.result-footer {
+    padding: 20rpx 60rpx 40rpx;
+    text-align: center;
+}
+.confirm-result {
+    background-color: #aad08f;
+    color: #fff;
+    border-radius: 50rpx;
+    padding: 20rpx 60rpx;
+    font-size: 28rpx;
+    font-weight: bold;
+    display: inline-block;
+}
+

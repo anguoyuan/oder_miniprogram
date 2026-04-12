@@ -1,0 +1,303 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* pages/profile-edit/profile-edit.wxss */
+.profile-edit-container {
+    min-height: 100vh;
+    background-color: #f8f8f8;
+    padding: 20rpx;
+    padding-bottom: 160rpx;
+}
+/* 表单区域 */
+.form-section {
+    background-color: #fff;
+    border-radius: 16rpx;
+    padding: 20rpx;
+    margin-bottom: 30rpx;
+}
+.form-item {
+    display: flex;
+    align-items: center;
+    padding: 30rpx 20rpx;
+    border-bottom: 1rpx solid #e0e0e0;
+}
+.form-item:last-child {
+    border-bottom: none;
+}
+.form-label {
+    width: 140rpx;
+    font-size: 30rpx;
+    color: #333;
+    font-weight: bold;
+}
+.form-input {
+    flex: 1;
+    font-size: 28rpx;
+    color: #333;
+}
+/* 头像按钮 */
+.avatar-button {
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+    overflow: visible;
+}
+.avatar-button::after {
+    border: none;
+}
+.avatar-image {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    border: 4rpx solid #aad08f;
+}
+.avatar-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.avatar-button:active .avatar-mask {
+    opacity: 1;
+}
+.avatar-text {
+    color: #fff;
+    font-size: 22rpx;
+}
+/* 保存按钮 */
+.save-button {
+    position: fixed;
+    bottom: 40rpx;
+    left: 40rpx;
+    right: 40rpx;
+    height: 90rpx;
+    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
+    color: #fff;
+    border-radius: 50rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+    font-weight: bold;
+    box-shadow: 0 8rpx 16rpx rgba(170, 208, 143, 0.3);
+}
+/* 提示信息 */
+.tips {
+    background-color: #fff;
+    border-radius: 16rpx;
+    padding: 30rpx;
+}
+.tip-text {
+    display: block;
+    font-size: 26rpx;
+    color: #999;
+    line-height: 2;
+}
+

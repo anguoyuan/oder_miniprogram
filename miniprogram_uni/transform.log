@@ -1,0 +1,86 @@
+开始转换……
+小程序路径:  E:/projects/order-system-tea/order-system-tea-miniprogram/miniprogram
+搜索到139个文件(含目录)，耗时：7ms
+
+开始分析文件
+分析文件信息完成，共23组数据
+开始转换文件组为vue文件
+转换进度: 1 / 46   fileKey：app
+转换进度: 2 / 46   fileKey：components/navigation-bar/navigation-bar
+转换进度: 3 / 46   fileKey：config
+转换进度: 4 / 46   fileKey：pages/address/address
+转换进度: 5 / 46   fileKey：pages/address-edit/address-edit
+转换进度: 6 / 46   fileKey：pages/cart/cart
+转换进度: 7 / 46   fileKey：pages/checkout/checkout
+转换进度: 8 / 46   fileKey：pages/favorite/favorite
+转换进度: 9 / 46   fileKey：pages/index/index
+转换进度: 10 / 46   fileKey：pages/likes/likes
+转换进度: 11 / 46   fileKey：pages/lottery/lottery
+转换进度: 12 / 46   fileKey：pages/order/order
+转换进度: 13 / 46   fileKey：pages/orderList/orderList
+转换进度: 14 / 46   fileKey：pages/product-detail/product-detail
+转换进度: 15 / 46   fileKey：pages/profile/profile
+转换进度: 16 / 46   fileKey：pages/profile-edit/profile-edit
+转换进度: 17 / 46   fileKey：pages/review/review
+转换进度: 18 / 46   fileKey：pages/review-detail/review-detail
+转换进度: 19 / 46   fileKey：project.config
+转换进度: 20 / 46   fileKey：project.private.config
+转换进度: 21 / 46   fileKey：sitemap
+转换进度: 22 / 46   fileKey：utils/api
+转换进度: 23 / 46   fileKey：utils/request
+开始二次遍历及生成vue文件
+转换进度: 24 / 46   fileKey：app
+转换进度: 25 / 46   fileKey：components/navigation-bar/navigation-bar
+转换进度: 26 / 46   fileKey：config
+转换进度: 27 / 46   fileKey：pages/address/address
+转换进度: 28 / 46   fileKey：pages/address-edit/address-edit
+转换进度: 29 / 46   fileKey：pages/cart/cart
+转换进度: 30 / 46   fileKey：pages/checkout/checkout
+转换进度: 31 / 46   fileKey：pages/favorite/favorite
+转换进度: 32 / 46   fileKey：pages/index/index
+转换进度: 33 / 46   fileKey：pages/likes/likes
+转换进度: 34 / 46   fileKey：pages/lottery/lottery
+转换进度: 35 / 46   fileKey：pages/order/order
+转换进度: 36 / 46   fileKey：pages/orderList/orderList
+转换进度: 37 / 46   fileKey：pages/product-detail/product-detail
+转换进度: 38 / 46   fileKey：pages/profile/profile
+转换进度: 39 / 46   fileKey：pages/profile-edit/profile-edit
+转换进度: 40 / 46   fileKey：pages/review/review
+转换进度: 41 / 46   fileKey：pages/review-detail/review-detail
+转换进度: 42 / 46   fileKey：project.config
+转换进度: 43 / 46   fileKey：project.private.config
+转换进度: 44 / 46   fileKey：sitemap
+转换进度: 45 / 46   fileKey：utils/api
+转换进度: 46 / 46   fileKey：utils/request
+write pages.json success!
+write manifest.json success!
+write main.js success!
+write package.json success!
+
+
+统计信息：
+
+Component数量: 1
+Page数量: 15
+支付api数量: 0
+登录api数量: 2
+chooseMedia数量: 1
+getLocation数量: 0
+getRelationNodes数量: 0
+<ad/>数量: 0
+<map/>数量: 0
+<video/>数量: 0
+Vant组件: ， 数量：0
+
+项目转换完成！
+用时: 6.265s
+工具版本：v2.2.6
+在该小程序项目的同级目录可以看到_uni结尾的项目，即是转换好的uniapp项目，相关日志在该目录里。
+
+使用说明：
+    1.因各种原因，本工具并非100%完美转换！部分语法仍需人工处理！
+    2.工具转换原理及说明文档参考：https://l4rz4zwpx7.k.topthink.com/@kmrvzg72lx/
+    3.如遇运行报错，请添加QQ群(五群：536178289)带图反馈或https://github.com/zhangdaren/miniprogram-to-uniapp提交Issue！
+    4.转换后请查阅_uni目录或_uni-cli目录里的 README.md 和 transform.log
+
+

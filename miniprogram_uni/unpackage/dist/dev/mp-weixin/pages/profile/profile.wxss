@@ -1,0 +1,582 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* pages/profile/profile.wxss */
+.profile-container {
+    background-color: #f8f8f8;
+    min-height: 100vh;
+}
+.main-content {
+    padding-top: 10rpx;
+    padding-bottom: 20rpx;
+}
+/* 用户信息区域 */
+.user-section {
+    margin: 20rpx 20rpx 30rpx;
+}
+.user-info {
+    display: flex;
+    align-items: center;
+    padding: 30rpx;
+}
+.user-avatar {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    margin-right: 20rpx;
+}
+.user-details {
+    flex: 1;
+}
+.user-name {
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8rpx;
+    display: block;
+}
+.user-level {
+    font-size: 24rpx;
+    color: #aad08f;
+    background-color: #fff3e0;
+    padding: 4rpx 12rpx;
+    border-radius: 20rpx;
+    display: inline-block;
+}
+.user-actions {
+    display: flex;
+    gap: 10rpx;
+}
+.edit-btn {
+    padding: 16rpx 20rpx;
+    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
+    color: #fff;
+    border-radius: 50rpx;
+    font-size: 28rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.logout-btn {
+    padding: 16rpx 24rpx;
+    background-color: #f0f0f0;
+    border-radius: 50rpx;
+    font-size: 24rpx;
+    color: #666;
+}
+/* 登录区域 */
+.login-section {
+    padding: 30rpx;
+}
+.login-prompt {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+.default-avatar {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    margin-right: 20rpx;
+    opacity: 0.8;
+}
+.login-text {
+    flex: 1;
+}
+.login-title {
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8rpx;
+    display: block;
+}
+.login-subtitle {
+    font-size: 24rpx;
+    color: #999;
+}
+.login-arrow {
+    font-size: 32rpx;
+    color: #ccc;
+}
+/* 统计信息 */
+.stats-section {
+    margin: 0 20rpx 30rpx;
+    padding: 30rpx;
+    display: flex;
+    align-items: center;
+}
+.stats-item {
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+}
+.stats-number {
+    font-size: 36rpx;
+    font-weight: bold;
+    color: #aad08f;
+    display: block;
+    margin-bottom: 8rpx;
+}
+.stats-label {
+    font-size: 24rpx;
+    color: #666;
+}
+.stats-divider {
+    width: 1rpx;
+    height: 60rpx;
+    background-color: #e0e0e0;
+}
+/* 菜单区域 */
+.menu-section {
+    padding: 0 20rpx;
+}
+.menu-group {
+    margin-bottom: 30rpx;
+    padding: 0;
+    overflow: hidden;
+}
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 30rpx;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.menu-item:active {
+    background-color: #f8f8f8;
+}
+.menu-icon {
+    width: 60rpx;
+    height: 60rpx;
+    margin-right: 20rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.icon {
+    width: 40rpx;
+    height: 40rpx;
+}
+.menu-text {
+    flex: 1;
+    font-size: 28rpx;
+    color: #333;
+}
+.menu-arrow {
+    font-size: 28rpx;
+    color: #ccc;
+}
+.menu-divider {
+    height: 1rpx;
+    background-color: #f0f0f0;
+    margin: 0 30rpx;
+}
+/* 版本信息 */
+.version-info {
+    text-align: center;
+    padding: 40rpx 20rpx;
+}
+.version-text {
+    font-size: 24rpx;
+    color: #999;
+}
+

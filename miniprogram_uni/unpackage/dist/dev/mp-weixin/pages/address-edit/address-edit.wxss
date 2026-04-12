@@ -1,0 +1,388 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* pages/address-edit/address-edit.wxss */
+.address-edit-container {
+    min-height: 100vh;
+    background-color: #f8f8f8;
+    padding: 20rpx;
+    padding-bottom: 140rpx;
+}
+/* 表单区域 */
+.form-section {
+    background-color: #fff;
+    border-radius: 16rpx;
+    padding: 20rpx;
+}
+.form-item {
+    display: flex;
+    align-items: center;
+    padding: 30rpx 20rpx;
+    border-bottom: 1rpx solid #e0e0e0;
+}
+.form-item-full {
+    flex-direction: column;
+    align-items: flex-start;
+}
+.form-item-switch {
+    justify-content: space-between;
+    border-bottom: none;
+}
+.form-label {
+    width: 160rpx;
+    font-size: 30rpx;
+    color: #333;
+    font-weight: bold;
+}
+.form-input {
+    flex: 1;
+    font-size: 28rpx;
+    color: #333;
+}
+.form-textarea {
+    width: 100%;
+    min-height: 150rpx;
+    margin-top: 20rpx;
+    padding: 20rpx;
+    background-color: #f8f8f8;
+    border-radius: 12rpx;
+    font-size: 28rpx;
+}
+.region-picker {
+    flex: 1;
+}
+.picker-value {
+    font-size: 28rpx;
+    color: #333;
+    text-align: right;
+}
+.form-item-button {
+    flex-direction: column;
+    align-items: flex-start;
+}
+.location-button {
+    width: 100%;
+    margin-top: 20rpx;
+    padding: 24rpx;
+    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
+    color: #fff;
+    border-radius: 12rpx;
+    font-size: 28rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10rpx;
+    border: none;
+}
+.location-button::after {
+    border: none;
+}
+.location-icon {
+    font-size: 32rpx;
+}
+.region-display {
+    flex: 1;
+    font-size: 28rpx;
+    color: #666;
+    text-align: right;
+}
+/* 保存按钮 */
+.save-btn {
+    position: fixed;
+    bottom: 40rpx;
+    left: 40rpx;
+    right: 40rpx;
+    height: 90rpx;
+    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
+    color: #fff;
+    border-radius: 50rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+    font-weight: bold;
+    box-shadow: 0 8rpx 16rpx rgba(170, 208, 143, 0.3);
+}
+
