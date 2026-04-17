@@ -3,8 +3,10 @@ const OrderModel = require('../models/orderModel');
 const { generatePayNowQRDataURL } = require('../utils/paynowQR');
 const { success, error } = require('../utils/response');
 
-// Merchant config — override via env vars in production
-const MERCHANT_UEN = process.env.PAYNOW_UEN || '202012345A';
+// Merchant config — set PAYNOW_MOBILE (+65XXXXXXXX) for personal PayNow,
+// or PAYNOW_UEN for business PayNow. MOBILE takes priority.
+const MERCHANT_MOBILE = process.env.PAYNOW_MOBILE || '';
+const MERCHANT_UEN = process.env.PAYNOW_UEN || '';
 const MERCHANT_NAME = process.env.PAYNOW_MERCHANT_NAME || 'Shanghai Pastry';
 
 class PaymentController {
@@ -27,7 +29,8 @@ class PaymentController {
       const existing = await PaymentModel.findByOrderId(orderId);
       if (existing && existing.status === 'pending') {
         const { dataURL } = await generatePayNowQRDataURL({
-          uen: MERCHANT_UEN,
+          mobile: MERCHANT_MOBILE || undefined,
+          uen: MERCHANT_UEN || undefined,
           amount: existing.amount,
           reference: existing.reference,
           merchantName: MERCHANT_NAME
@@ -42,7 +45,8 @@ class PaymentController {
       }
 
       const { qrString, dataURL } = await generatePayNowQRDataURL({
-        uen: MERCHANT_UEN,
+        mobile: MERCHANT_MOBILE || undefined,
+        uen: MERCHANT_UEN || undefined,
         amount: order.total_price,
         reference: order.order_no,
         merchantName: MERCHANT_NAME

@@ -21,22 +21,27 @@ function tlv(id, value) {
 /**
  * Generate a PayNow dynamic QR string (EMVCo / SGQR spec).
  * @param {object} opts
- * @param {string} opts.uen           - Merchant UEN (e.g. "202012345A")
+ * @param {string} [opts.mobile]      - Mobile number with country code, e.g. "+6591234567"
+ * @param {string} [opts.uen]         - Merchant UEN (e.g. "202012345A") — used if no mobile
  * @param {string|number} opts.amount - Transaction amount in SGD
  * @param {string} opts.reference     - Bill reference / order number
  * @param {string} opts.merchantName  - Merchant name (max 25 chars)
  * @param {string} [opts.expiryDate]  - YYYYMMDD, defaults to tomorrow
  * @returns {string} PayNow QR string
  */
-function generatePayNowQRString({ uen, amount, reference, merchantName, expiryDate }) {
+function generatePayNowQRString({ mobile, uen, amount, reference, merchantName, expiryDate }) {
   const amountStr = parseFloat(amount).toFixed(2);
   const expiry = expiryDate || new Date(Date.now() + 86400000)
     .toISOString().slice(0, 10).replace(/-/g, '');
 
+  // Type 0 = mobile number (+65XXXXXXXX), Type 2 = UEN
+  const proxyType = mobile ? '0' : '2';
+  const proxyValue = mobile || uen;
+
   const merchantAccountInfo =
     tlv('00', 'SG.PAYNOW') +
-    tlv('01', '2') +           // Type 2 = UEN
-    tlv('02', uen) +
+    tlv('01', proxyType) +
+    tlv('02', proxyValue) +
     tlv('03', '0') +           // Fixed amount (not editable by payer)
     tlv('04', expiry);
 
