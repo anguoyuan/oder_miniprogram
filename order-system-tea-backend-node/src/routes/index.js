@@ -14,6 +14,7 @@ const addressRoutes = require('./addressRoutes');
 const favoriteRoutes = require('./favoriteRoutes');
 const likeRoutes = require('./likeRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
+const paymentRoutes = require('./paymentRoutes');
 
 // 挂载路由
 router.use('/user', userRoutes);
@@ -29,6 +30,7 @@ router.use('/address', addressRoutes);
 router.use('/favorite', favoriteRoutes);
 router.use('/like', likeRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/payment', paymentRoutes);
 
 module.exports = router;
 

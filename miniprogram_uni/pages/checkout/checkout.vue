@@ -63,14 +63,27 @@
             <textarea class="remark-input" placeholder="请输入备注信息（选填）" :value="remark" @input="inputRemark" maxlength="200" />
         </view>
 
+        <!-- 支付方式 -->
+        <view class="section payment-section">
+            <view class="section-header">
+                <text class="section-icon">💳</text>
+                <text class="section-title">支付方式</text>
+            </view>
+            <view class="payment-option active">
+                <view class="paynow-logo">PayNow</view>
+                <text class="payment-name">PayNow 扫码付款</text>
+                <text class="payment-check">✓</text>
+            </view>
+        </view>
+
         <!-- 底部结算栏 -->
         <view class="checkout-footer">
             <view class="total-info">
                 <text class="total-label">合计：</text>
-                <text class="total-price">¥{{ totalPrice }}</text>
+                <text class="total-price">S$ {{ totalPrice }}</text>
             </view>
             <view :class="'submit-btn ' + (submitting ? 'disabled' : '')" @tap="submitOrder">
-                <text>{{ submitting ? '提交中...' : '提交订单' }}</text>
+                <text>{{ submitting ? '提交中...' : '去付款' }}</text>
             </view>
         </view>
     </view>
@@ -297,36 +310,13 @@ export default {
                 };
                 const result = await api.createOrder(orderData);
 
-                // 如果是自取订单，生成取餐码
-                if (this.deliveryType === 'pickup') {
-                    const pickupCode = this.generatePickupCode();
-                    this.setData({
-                        pickupCode: pickupCode
-                    });
-
-                    // 显示取餐码弹窗
-                    uni.showModal({
-                        title: '下单成功',
-                        content: `您的取餐码是：${pickupCode}\n请凭此码到店取餐`,
-                        showCancel: false,
-                        success: () => {
-                            this.navigateToOrderList();
-                        }
-                    });
-                } else {
-                    // 外卖订单直接跳转
-                    uni.showToast({
-                        title: '下单成功',
-                        icon: 'success',
-                        duration: 2000
-                    });
-                    setTimeout(() => {
-                        this.navigateToOrderList();
-                    }, 2000);
-                }
-
                 // 清空购物车
                 app.globalData.clearCart();
+
+                // 跳转到 PayNow 付款页
+                uni.navigateTo({
+                    url: `/pages/payment/payment?orderId=${result.id}`
+                });
             } catch (error) {
                 console.log('CatchClause', error);
                 console.log('CatchClause', error);
@@ -553,5 +543,43 @@ export default {
 
 .submit-btn.disabled {
     opacity: 0.5;
+}
+
+/* 支付方式 */
+.payment-option {
+    display: flex;
+    align-items: center;
+    padding: 24rpx 20rpx;
+    background-color: #f8f8f8;
+    border-radius: 12rpx;
+    border: 2rpx solid transparent;
+}
+
+.payment-option.active {
+    background-color: #f3e5f5;
+    border-color: #a569bd;
+}
+
+.paynow-logo {
+    background: linear-gradient(135deg, #6c3483, #a569bd);
+    color: #fff;
+    font-size: 22rpx;
+    font-weight: bold;
+    padding: 6rpx 16rpx;
+    border-radius: 6rpx;
+    margin-right: 18rpx;
+    letter-spacing: 1rpx;
+}
+
+.payment-name {
+    flex: 1;
+    font-size: 28rpx;
+    color: #333;
+}
+
+.payment-check {
+    font-size: 32rpx;
+    color: #6c3483;
+    font-weight: bold;
 }
 </style>

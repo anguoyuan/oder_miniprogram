@@ -220,6 +220,22 @@ function checkDeliveryRange(latitude, longitude) {
     });
 }
 
+// ==================== 支付相关 ====================
+
+/**
+ * 创建 PayNow 支付（生成二维码）
+ */
+function createPayment(orderId) {
+    return request.post('/payment/create', { orderId });
+}
+
+/**
+ * 查询支付状态
+ */
+function getPaymentStatus(paymentId) {
+    return request.get(`/payment/status/${paymentId}`);
+}
+
 // ==================== 评价相关 ====================
 
 /**
@@ -273,5 +289,7 @@ module.exports = {
     checkDeliveryRange,
     submitReview,
     getOrderReview,
-    checkHasReviewed
+    checkHasReviewed,
+    createPayment,
+    getPaymentStatus
 };
