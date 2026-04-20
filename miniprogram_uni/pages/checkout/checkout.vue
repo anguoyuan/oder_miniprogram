@@ -18,10 +18,18 @@
                 </view>
             </view>
 
-            <view v-if="deliveryType === 'delivery'" class="delivery-row" @tap="selectAddress">
-                <text class="delivery-row-label">Address</text>
-                <text class="delivery-row-value">{{ address }}</text>
-                <text class="arrow">›</text>
+            <view v-if="deliveryType === 'delivery'">
+                <view v-if="parseFloat(totalPrice) >= 65" class="delivery-row" @tap="openAddressPicker">
+                    <text class="delivery-row-label">Address</text>
+                    <text :class="'delivery-row-value ' + (address === '请选择收货地址' ? 'placeholder' : '')">
+                        {{ address === '请选择收货地址' ? 'Please enter your address' : address }}
+                    </text>
+                    <text class="arrow">›</text>
+                </view>
+                <view v-else class="delivery-row">
+                    <text class="delivery-row-label">MRT</text>
+                    <input class="mrt-input" placeholder="Please enter your MRT station" :value="mrtStation" @input="e => setData({ mrtStation: e.detail.value })" />
+                </view>
             </view>
 
             <view class="delivery-row" @tap="selectTime">
@@ -83,6 +91,77 @@
             <textarea class="remark-input" placeholder="Add notes (optional)" :value="remark" @input="inputRemark" maxlength="200" />
         </view>
 
+        <!-- 地址选择弹窗 -->
+        <view v-if="showAddressPicker" class="picker-overlay" @tap="showAddressPicker = false">
+            <view class="picker-sheet" @tap.stop>
+                <view class="picker-header">
+                    <text class="picker-title">Select delivery address</text>
+                    <text class="addr-add-btn" @tap="openAddressForm">Add</text>
+                </view>
+                <scroll-view scroll-y class="addr-list">
+                    <view v-if="addressList.length === 0" class="addr-empty">
+                        <text class="addr-empty-text">No Address</text>
+                    </view>
+                    <view v-for="(item, i) in addressList" :key="i"
+                          :class="'addr-item ' + (selectedAddress && selectedAddress.id == item.id ? 'selected' : '')"
+                          @tap="selectAddressItem(item)">
+                        <view class="addr-item-info">
+                            <text class="addr-item-name">{{ item.name }}  {{ item.phone }}</text>
+                            <text class="addr-item-detail">{{ item.province }}{{ item.city }}{{ item.district }}{{ item.detail }}</text>
+                        </view>
+                        <view :class="'addr-radio ' + (selectedAddress && selectedAddress.id == item.id ? 'active' : '')"></view>
+                    </view>
+                </scroll-view>
+            </view>
+        </view>
+
+        <!-- 新增地址表单 -->
+        <view v-if="showAddressForm" class="addr-form-overlay">
+            <view class="addr-form-header">
+                <text class="addr-form-close" @tap="closeAddressForm">✕</text>
+                <text class="addr-form-title">Add new delivery address</text>
+            </view>
+            <scroll-view scroll-y class="addr-form-body">
+                <view class="addr-field-group">
+                    <view class="addr-field-label">Postal code</view>
+                    <input class="addr-field-input" placeholder="e.g. 399948" :value="newAddr.postalCode" @input="onAddrInput('postalCode', $event)" />
+                </view>
+                <view class="addr-field-group">
+                    <view class="addr-field-label">Building name <text class="addr-field-optional">Optional</text></view>
+                    <input class="addr-field-input" placeholder="Building name" :value="newAddr.building" @input="onAddrInput('building', $event)" />
+                </view>
+                <view class="addr-field-group">
+                    <view class="addr-field-label">Address</view>
+                    <input class="addr-field-input" placeholder="Street address" :value="newAddr.address" @input="onAddrInput('address', $event)" />
+                </view>
+                <view class="addr-field-row">
+                    <view class="addr-field-half">
+                        <view class="addr-field-label">Floor</view>
+                        <input class="addr-field-input" placeholder="e.g. 06" :value="newAddr.floor" @input="onAddrInput('floor', $event)" />
+                    </view>
+                    <view class="addr-field-half">
+                        <view class="addr-field-label">Unit number</view>
+                        <input class="addr-field-input" placeholder="e.g. 31" :value="newAddr.unit" @input="onAddrInput('unit', $event)" />
+                    </view>
+                </view>
+                <view class="addr-recipient-section">
+                    <view class="addr-section-title">Recipient's information</view>
+                    <view class="addr-section-divider" />
+                </view>
+                <view class="addr-field-group">
+                    <view class="addr-field-label">Name</view>
+                    <input class="addr-field-input" placeholder="Full name" :value="newAddr.name" @input="onAddrInput('name', $event)" />
+                </view>
+                <view class="addr-field-group">
+                    <view class="addr-field-label">Mobile number</view>
+                    <input class="addr-field-input" placeholder="Phone number" :value="newAddr.phone" @input="onAddrInput('phone', $event)" type="number" />
+                </view>
+            </scroll-view>
+            <view class="addr-form-save" @tap="saveNewAddress">
+                <text>Add address</text>
+            </view>
+        </view>
+
         <!-- 时间选择弹窗 -->
         <view v-if="showTimePicker" class="picker-overlay" @tap="cancelTime">
             <view class="picker-sheet" @tap.stop>
@@ -142,7 +221,12 @@ export default {
             deliveryTime: '',
             showTimePicker: false,
             selectedDateIndex: 0,
-            tempTime: ''
+            tempTime: '',
+            showAddressPicker: false,
+            showAddressForm: false,
+            addressList: [],
+            mrtStation: '',
+            newAddr: { postalCode: '', building: '', address: '', floor: '', unit: '', name: '', phone: '' }
         };
     },
     computed: {
@@ -282,11 +366,70 @@ export default {
             this.setData({ showTimePicker: false });
         },
 
-        // 选择地址
-        async selectAddress() {
-            uni.navigateTo({
-                url: '/pages/address/address?from=checkout'
+        // 打开地址选择弹窗
+        async openAddressPicker() {
+            let list = [];
+            if (app.globalData.isLogin) {
+                try { list = await api.getAddressList() || []; } catch (e) {}
+            } else {
+                list = uni.getStorageSync('guestAddresses') || [];
+            }
+            this.setData({ addressList: list, showAddressPicker: true });
+        },
+
+        // 选中某个地址
+        selectAddressItem(item) {
+            const fullAddr = `${item.name} ${item.phone} ${item.province || ''}${item.city || ''}${item.district || ''}${item.detail || ''}`;
+            this.setData({ selectedAddress: item, address: fullAddr, showAddressPicker: false });
+        },
+
+        // 打开新增地址表单
+        openAddressForm() {
+            this.setData({
+                showAddressPicker: false,
+                showAddressForm: true,
+                newAddr: { postalCode: '', building: '', address: '', floor: '', unit: '', name: '', phone: '' }
             });
+        },
+
+        // 关闭新增地址表单
+        closeAddressForm() {
+            this.setData({ showAddressForm: false });
+            this.openAddressPicker();
+        },
+
+        // 新增地址表单输入
+        onAddrInput(field, e) {
+            const updated = Object.assign({}, this.newAddr);
+            updated[field] = e.detail.value;
+            this.setData({ newAddr: updated });
+        },
+
+        // 保存新地址
+        async saveNewAddress() {
+            const a = this.newAddr;
+            if (!a.address) { uni.showToast({ title: 'Please enter address', icon: 'none' }); return; }
+            if (!a.name)    { uni.showToast({ title: 'Please enter name', icon: 'none' }); return; }
+            const detail = `${a.building ? a.building + ', ' : ''}${a.address}${a.floor ? ', Floor ' + a.floor : ''}${a.unit ? ' #' + a.unit : ''}`;
+            const addrData = {
+                name: a.name, phone: a.phone,
+                province: '', city: '', district: '',
+                detail: `${detail}${a.postalCode ? ', ' + a.postalCode : ''}`,
+                isDefault: false
+            };
+            if (app.globalData.isLogin) {
+                try { await api.addAddress(addrData); } catch (e) {
+                    uni.showToast({ title: 'Save failed', icon: 'none' }); return;
+                }
+            } else {
+                let list = uni.getStorageSync('guestAddresses') || [];
+                addrData.id = Date.now();
+                if (list.length === 0) addrData.isDefault = true;
+                list.push(addrData);
+                uni.setStorageSync('guestAddresses', list);
+            }
+            this.setData({ showAddressForm: false });
+            await this.openAddressPicker();
         },
 
         // 输入备注
@@ -618,6 +761,190 @@ export default {
 .goods-quantity {
     font-size: 24rpx;
     color: #a08060;
+}
+
+/* MRT 输入 */
+.mrt-input {
+    flex: 1;
+    font-size: 26rpx;
+    color: #2c1a0e;
+    text-align: right;
+}
+
+/* 地址选择弹窗 */
+.addr-add-btn {
+    font-size: 28rpx;
+    color: #2c1a0e;
+    font-weight: bold;
+}
+
+.addr-list {
+    max-height: 600rpx;
+}
+
+.addr-empty {
+    padding: 60rpx 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.addr-empty-text {
+    font-size: 28rpx;
+    color: #a08060;
+}
+
+.addr-item {
+    display: flex;
+    align-items: center;
+    padding: 24rpx 0;
+    border-bottom: 1rpx solid #f0ebe6;
+}
+
+.addr-item:last-child { border-bottom: none; }
+
+.addr-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+    margin-right: 20rpx;
+}
+
+.addr-item-name {
+    font-size: 28rpx;
+    font-weight: 500;
+    color: #2c1a0e;
+}
+
+.addr-item-detail {
+    font-size: 24rpx;
+    color: #a08060;
+    line-height: 1.5;
+}
+
+.addr-radio {
+    width: 40rpx;
+    height: 40rpx;
+    border-radius: 50%;
+    border: 3rpx solid #c0b0a0;
+    flex-shrink: 0;
+}
+
+.addr-radio.active {
+    background-color: #2c1a0e;
+    border-color: #2c1a0e;
+    box-shadow: inset 0 0 0 6rpx #fff;
+}
+
+/* 新增地址表单 */
+.addr-form-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #fff;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.addr-form-header {
+    display: flex;
+    align-items: center;
+    padding: 24rpx 30rpx;
+    padding-top: calc(var(--status-bar-height) + 24rpx);
+    border-bottom: 1rpx solid #f0ebe6;
+    flex-shrink: 0;
+}
+
+.addr-form-close {
+    font-size: 40rpx;
+    color: #333;
+    margin-right: 24rpx;
+    line-height: 1;
+    padding: 8rpx;
+}
+
+.addr-form-title {
+    font-size: 30rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+}
+
+.addr-form-body {
+    flex: 1;
+    padding: 0 30rpx 30rpx;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.addr-field-group {
+    margin-top: 32rpx;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.addr-field-label {
+    font-size: 26rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+    margin-bottom: 12rpx;
+}
+
+.addr-field-optional {
+    font-size: 22rpx;
+    color: #a08060;
+    font-weight: normal;
+}
+
+.addr-field-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: 2rpx solid #ddd;
+    border-radius: 12rpx;
+    padding: 22rpx 24rpx;
+    font-size: 28rpx;
+    color: #2c1a0e;
+    min-height: 80rpx;
+}
+
+.addr-field-row {
+    display: flex;
+    gap: 20rpx;
+    margin-top: 32rpx;
+}
+
+.addr-field-half {
+    flex: 1;
+}
+
+.addr-recipient-section {
+    margin-top: 48rpx;
+}
+
+.addr-section-title {
+    font-size: 26rpx;
+    color: #a08060;
+    margin-bottom: 16rpx;
+}
+
+.addr-section-divider {
+    height: 1rpx;
+    background-color: #ede8e3;
+}
+
+.addr-form-save {
+    margin: 20rpx 30rpx 60rpx;
+    background-color: #2c1a0e;
+    height: 96rpx;
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #fff;
+    flex-shrink: 0;
 }
 
 /* 时间选择弹窗 */

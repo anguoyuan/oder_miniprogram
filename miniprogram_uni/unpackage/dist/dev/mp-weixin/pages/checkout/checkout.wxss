@@ -436,6 +436,149 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* pages/checkout/checkout.wxss */
 .checkout-container {
     min-height: 100vh;
@@ -591,6 +734,164 @@
 .goods-quantity {
     font-size: 24rpx;
     color: #a08060;
+}
+/* MRT 输入 */
+.mrt-input {
+    flex: 1;
+    font-size: 26rpx;
+    color: #2c1a0e;
+    text-align: right;
+}
+/* 地址选择弹窗 */
+.addr-add-btn {
+    font-size: 28rpx;
+    color: #2c1a0e;
+    font-weight: bold;
+}
+.addr-list {
+    max-height: 600rpx;
+}
+.addr-empty {
+    padding: 60rpx 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.addr-empty-text {
+    font-size: 28rpx;
+    color: #a08060;
+}
+.addr-item {
+    display: flex;
+    align-items: center;
+    padding: 24rpx 0;
+    border-bottom: 1rpx solid #f0ebe6;
+}
+.addr-item:last-child { border-bottom: none;
+}
+.addr-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+    margin-right: 20rpx;
+}
+.addr-item-name {
+    font-size: 28rpx;
+    font-weight: 500;
+    color: #2c1a0e;
+}
+.addr-item-detail {
+    font-size: 24rpx;
+    color: #a08060;
+    line-height: 1.5;
+}
+.addr-radio {
+    width: 40rpx;
+    height: 40rpx;
+    border-radius: 50%;
+    border: 3rpx solid #c0b0a0;
+    flex-shrink: 0;
+}
+.addr-radio.active {
+    background-color: #2c1a0e;
+    border-color: #2c1a0e;
+    box-shadow: inset 0 0 0 6rpx #fff;
+}
+/* 新增地址表单 */
+.addr-form-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #fff;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+.addr-form-header {
+    display: flex;
+    align-items: center;
+    padding: 24rpx 30rpx;
+    padding-top: calc(25px + 24rpx);
+    border-bottom: 1rpx solid #f0ebe6;
+    flex-shrink: 0;
+}
+.addr-form-close {
+    font-size: 40rpx;
+    color: #333;
+    margin-right: 24rpx;
+    line-height: 1;
+    padding: 8rpx;
+}
+.addr-form-title {
+    font-size: 30rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+}
+.addr-form-body {
+    flex: 1;
+    padding: 0 30rpx 30rpx;
+    box-sizing: border-box;
+    width: 100%;
+}
+.addr-field-group {
+    margin-top: 32rpx;
+    width: 100%;
+    box-sizing: border-box;
+}
+.addr-field-label {
+    font-size: 26rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+    margin-bottom: 12rpx;
+}
+.addr-field-optional {
+    font-size: 22rpx;
+    color: #a08060;
+    font-weight: normal;
+}
+.addr-field-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: 2rpx solid #ddd;
+    border-radius: 12rpx;
+    padding: 22rpx 24rpx;
+    font-size: 28rpx;
+    color: #2c1a0e;
+    min-height: 80rpx;
+}
+.addr-field-row {
+    display: flex;
+    gap: 20rpx;
+    margin-top: 32rpx;
+}
+.addr-field-half {
+    flex: 1;
+}
+.addr-recipient-section {
+    margin-top: 48rpx;
+}
+.addr-section-title {
+    font-size: 26rpx;
+    color: #a08060;
+    margin-bottom: 16rpx;
+}
+.addr-section-divider {
+    height: 1rpx;
+    background-color: #ede8e3;
+}
+.addr-form-save {
+    margin: 20rpx 30rpx 60rpx;
+    background-color: #2c1a0e;
+    height: 96rpx;
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #fff;
+    flex-shrink: 0;
 }
 /* 时间选择弹窗 */
 .picker-overlay {

@@ -102,8 +102,18 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
+  var m0 = _vm.deliveryType === "delivery" ? parseFloat(_vm.totalPrice) : null
+  var g0 = _vm.showAddressPicker ? _vm.addressList.length : null
   if (!_vm._isMounted) {
-    _vm.e0 = function ($event, slot) {
+    _vm.e0 = function (e) {
+      return _vm.setData({
+        mrtStation: e.detail.value,
+      })
+    }
+    _vm.e1 = function ($event) {
+      _vm.showAddressPicker = false
+    }
+    _vm.e2 = function ($event, slot) {
       var _temp = arguments[arguments.length - 1].currentTarget.dataset,
         _temp2 = _temp.eventParams || _temp["event-params"],
         slot = _temp2.slot
@@ -111,6 +121,15 @@ var render = function () {
       slot.available && _vm.selectSlot(slot.label)
     }
   }
+  _vm.$mp.data = Object.assign(
+    {},
+    {
+      $root: {
+        m0: m0,
+        g0: g0,
+      },
+    }
+  )
 }
 var recyclableRender = false
 var staticRenderFns = []
@@ -280,6 +299,85 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 // pages/checkout/checkout.js
 var app = getApp();
@@ -300,7 +398,20 @@ var _default = {
       deliveryTime: '',
       showTimePicker: false,
       selectedDateIndex: 0,
-      tempTime: ''
+      tempTime: '',
+      showAddressPicker: false,
+      showAddressForm: false,
+      addressList: [],
+      mrtStation: '',
+      newAddr: {
+        postalCode: '',
+        building: '',
+        address: '',
+        floor: '',
+        unit: '',
+        name: '',
+        phone: ''
+      }
     };
   },
   computed: {
@@ -521,22 +632,174 @@ var _default = {
         showTimePicker: false
       });
     },
-    // 选择地址
-    selectAddress: function selectAddress() {
+    // 打开地址选择弹窗
+    openAddressPicker: function openAddressPicker() {
+      var _this3 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3() {
+        var list;
         return _regenerator.default.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                uni.navigateTo({
-                  url: '/pages/address/address?from=checkout'
+                list = [];
+                if (!app.globalData.isLogin) {
+                  _context3.next = 15;
+                  break;
+                }
+                _context3.prev = 2;
+                _context3.next = 5;
+                return api.getAddressList();
+              case 5:
+                _context3.t0 = _context3.sent;
+                if (_context3.t0) {
+                  _context3.next = 8;
+                  break;
+                }
+                _context3.t0 = [];
+              case 8:
+                list = _context3.t0;
+                _context3.next = 13;
+                break;
+              case 11:
+                _context3.prev = 11;
+                _context3.t1 = _context3["catch"](2);
+              case 13:
+                _context3.next = 16;
+                break;
+              case 15:
+                list = uni.getStorageSync('guestAddresses') || [];
+              case 16:
+                _this3.setData({
+                  addressList: list,
+                  showAddressPicker: true
                 });
-              case 1:
+              case 17:
               case "end":
                 return _context3.stop();
             }
           }
-        }, _callee3);
+        }, _callee3, null, [[2, 11]]);
+      }))();
+    },
+    // 选中某个地址
+    selectAddressItem: function selectAddressItem(item) {
+      var fullAddr = "".concat(item.name, " ").concat(item.phone, " ").concat(item.province || '').concat(item.city || '').concat(item.district || '').concat(item.detail || '');
+      this.setData({
+        selectedAddress: item,
+        address: fullAddr,
+        showAddressPicker: false
+      });
+    },
+    // 打开新增地址表单
+    openAddressForm: function openAddressForm() {
+      this.setData({
+        showAddressPicker: false,
+        showAddressForm: true,
+        newAddr: {
+          postalCode: '',
+          building: '',
+          address: '',
+          floor: '',
+          unit: '',
+          name: '',
+          phone: ''
+        }
+      });
+    },
+    // 关闭新增地址表单
+    closeAddressForm: function closeAddressForm() {
+      this.setData({
+        showAddressForm: false
+      });
+      this.openAddressPicker();
+    },
+    // 新增地址表单输入
+    onAddrInput: function onAddrInput(field, e) {
+      var updated = Object.assign({}, this.newAddr);
+      updated[field] = e.detail.value;
+      this.setData({
+        newAddr: updated
+      });
+    },
+    // 保存新地址
+    saveNewAddress: function saveNewAddress() {
+      var _this4 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
+        var a, detail, addrData, list;
+        return _regenerator.default.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                a = _this4.newAddr;
+                if (a.address) {
+                  _context4.next = 4;
+                  break;
+                }
+                uni.showToast({
+                  title: 'Please enter address',
+                  icon: 'none'
+                });
+                return _context4.abrupt("return");
+              case 4:
+                if (a.name) {
+                  _context4.next = 7;
+                  break;
+                }
+                uni.showToast({
+                  title: 'Please enter name',
+                  icon: 'none'
+                });
+                return _context4.abrupt("return");
+              case 7:
+                detail = "".concat(a.building ? a.building + ', ' : '').concat(a.address).concat(a.floor ? ', Floor ' + a.floor : '').concat(a.unit ? ' #' + a.unit : '');
+                addrData = {
+                  name: a.name,
+                  phone: a.phone,
+                  province: '',
+                  city: '',
+                  district: '',
+                  detail: "".concat(detail).concat(a.postalCode ? ', ' + a.postalCode : ''),
+                  isDefault: false
+                };
+                if (!app.globalData.isLogin) {
+                  _context4.next = 21;
+                  break;
+                }
+                _context4.prev = 10;
+                _context4.next = 13;
+                return api.addAddress(addrData);
+              case 13:
+                _context4.next = 19;
+                break;
+              case 15:
+                _context4.prev = 15;
+                _context4.t0 = _context4["catch"](10);
+                uni.showToast({
+                  title: 'Save failed',
+                  icon: 'none'
+                });
+                return _context4.abrupt("return");
+              case 19:
+                _context4.next = 26;
+                break;
+              case 21:
+                list = uni.getStorageSync('guestAddresses') || [];
+                addrData.id = Date.now();
+                if (list.length === 0) addrData.isDefault = true;
+                list.push(addrData);
+                uni.setStorageSync('guestAddresses', list);
+              case 26:
+                _this4.setData({
+                  showAddressForm: false
+                });
+                _context4.next = 29;
+                return _this4.openAddressPicker();
+              case 29:
+              case "end":
+                return _context4.stop();
+            }
+          }
+        }, _callee4, null, [[10, 15]]);
       }))();
     },
     // 输入备注
@@ -547,29 +810,29 @@ var _default = {
     },
     // 提交订单
     submitOrder: function submitOrder() {
-      var _this3 = this;
-      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
+      var _this5 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee5() {
         var result, orderData, _result, pickupCode;
-        return _regenerator.default.wrap(function _callee4$(_context4) {
+        return _regenerator.default.wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
-                if (!(_this3.selectedItems.length === 0)) {
-                  _context4.next = 3;
+                if (!(_this5.selectedItems.length === 0)) {
+                  _context5.next = 3;
                   break;
                 }
                 uni.showToast({
                   title: '请选择商品',
                   icon: 'none'
                 });
-                return _context4.abrupt("return");
+                return _context5.abrupt("return");
               case 3:
-                if (!(_this3.deliveryType === 'delivery')) {
-                  _context4.next = 24;
+                if (!(_this5.deliveryType === 'delivery')) {
+                  _context5.next = 24;
                   break;
                 }
-                if (!(!_this3.selectedAddress || _this3.address === '请选择收货地址')) {
-                  _context4.next = 7;
+                if (!(!_this5.selectedAddress || _this5.address === '请选择收货地址')) {
+                  _context5.next = 7;
                   break;
                 }
                 uni.showModal({
@@ -578,23 +841,23 @@ var _default = {
                   confirmText: '去选择',
                   success: function success(res) {
                     if (res.confirm) {
-                      _this3.selectAddress();
+                      _this5.selectAddress();
                     }
                   }
                 });
-                return _context4.abrupt("return");
+                return _context5.abrupt("return");
               case 7:
-                if (!(_this3.selectedAddress.latitude && _this3.selectedAddress.longitude)) {
-                  _context4.next = 24;
+                if (!(_this5.selectedAddress.latitude && _this5.selectedAddress.longitude)) {
+                  _context5.next = 24;
                   break;
                 }
-                _context4.prev = 8;
-                _context4.next = 11;
-                return api.checkDeliveryRange(_this3.selectedAddress.latitude, _this3.selectedAddress.longitude);
+                _context5.prev = 8;
+                _context5.next = 11;
+                return api.checkDeliveryRange(_this5.selectedAddress.latitude, _this5.selectedAddress.longitude);
               case 11:
-                result = _context4.sent;
+                result = _context5.sent;
                 if (result.inRange) {
-                  _context4.next = 15;
+                  _context5.next = 15;
                   break;
                 }
                 uni.showModal({
@@ -602,34 +865,34 @@ var _default = {
                   content: "\u5F53\u524D\u5730\u5740\u8DDD\u79BB\u5E97\u94FA".concat(result.distanceText, "\uFF0C\u8D85\u51FA\u914D\u9001\u8303\u56F4\uFF08").concat(result.maxDistance, "\u516C\u91CC\uFF09\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u5730\u5740"),
                   showCancel: false
                 });
-                return _context4.abrupt("return");
+                return _context5.abrupt("return");
               case 15:
-                _context4.next = 24;
+                _context5.next = 24;
                 break;
               case 17:
-                _context4.prev = 17;
-                _context4.t0 = _context4["catch"](8);
-                console.log('CatchClause', _context4.t0);
-                console.log('CatchClause', _context4.t0);
-                console.error('验证配送范围失败', _context4.t0);
+                _context5.prev = 17;
+                _context5.t0 = _context5["catch"](8);
+                console.log('CatchClause', _context5.t0);
+                console.log('CatchClause', _context5.t0);
+                console.error('验证配送范围失败', _context5.t0);
                 uni.showToast({
                   title: '验证配送范围失败',
                   icon: 'none'
                 });
-                return _context4.abrupt("return");
+                return _context5.abrupt("return");
               case 24:
-                _this3.setData({
+                _this5.setData({
                   submitting: true
                 });
-                _context4.prev = 25;
+                _context5.prev = 25;
                 orderData = {
                   guestId: app.globalData.isLogin ? undefined : app.globalData.guestId,
-                  orderType: _this3.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
-                  address: _this3.deliveryType === 'delivery' ? _this3.address : '到店自取',
-                  addressId: _this3.deliveryType === 'delivery' && _this3.selectedAddress ? _this3.selectedAddress.id : null,
-                  phone: _this3.deliveryType === 'delivery' && _this3.selectedAddress ? _this3.selectedAddress.phone : '',
-                  remark: _this3.remark,
-                  items: _this3.selectedItems.map(function (item) {
+                  orderType: _this5.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
+                  address: _this5.deliveryType === 'delivery' ? _this5.address : '到店自取',
+                  addressId: _this5.deliveryType === 'delivery' && _this5.selectedAddress ? _this5.selectedAddress.id : null,
+                  phone: _this5.deliveryType === 'delivery' && _this5.selectedAddress ? _this5.selectedAddress.phone : '',
+                  remark: _this5.remark,
+                  items: _this5.selectedItems.map(function (item) {
                     return {
                       productId: item.id,
                       quantity: item.quantity,
@@ -637,14 +900,14 @@ var _default = {
                     };
                   })
                 };
-                _context4.next = 29;
+                _context5.next = 29;
                 return api.createOrder(orderData);
               case 29:
-                _result = _context4.sent;
+                _result = _context5.sent;
                 // 如果是自取订单，生成取餐码
-                if (_this3.deliveryType === 'pickup') {
-                  pickupCode = _this3.generatePickupCode();
-                  _this3.setData({
+                if (_this5.deliveryType === 'pickup') {
+                  pickupCode = _this5.generatePickupCode();
+                  _this5.setData({
                     pickupCode: pickupCode
                   });
 
@@ -654,7 +917,7 @@ var _default = {
                     content: "\u60A8\u7684\u53D6\u9910\u7801\u662F\uFF1A".concat(pickupCode, "\n\u8BF7\u51ED\u6B64\u7801\u5230\u5E97\u53D6\u9910"),
                     showCancel: false,
                     success: function success() {
-                      _this3.navigateToOrderList();
+                      _this5.navigateToOrderList();
                     }
                   });
                 } else {
@@ -665,36 +928,36 @@ var _default = {
                     duration: 2000
                   });
                   setTimeout(function () {
-                    _this3.navigateToOrderList();
+                    _this5.navigateToOrderList();
                   }, 2000);
                 }
 
                 // 清空购物车
                 app.globalData.clearCart();
-                _context4.next = 40;
+                _context5.next = 40;
                 break;
               case 34:
-                _context4.prev = 34;
-                _context4.t1 = _context4["catch"](25);
-                console.log('CatchClause', _context4.t1);
-                console.log('CatchClause', _context4.t1);
-                console.error('提交订单失败', _context4.t1);
+                _context5.prev = 34;
+                _context5.t1 = _context5["catch"](25);
+                console.log('CatchClause', _context5.t1);
+                console.log('CatchClause', _context5.t1);
+                console.error('提交订单失败', _context5.t1);
                 uni.showToast({
                   title: '下单失败',
                   icon: 'none'
                 });
               case 40:
-                _context4.prev = 40;
-                _this3.setData({
+                _context5.prev = 40;
+                _this5.setData({
                   submitting: false
                 });
-                return _context4.finish(40);
+                return _context5.finish(40);
               case 43:
               case "end":
-                return _context4.stop();
+                return _context5.stop();
             }
           }
-        }, _callee4, null, [[8, 17], [25, 34, 40, 43]]);
+        }, _callee5, null, [[8, 17], [25, 34, 40, 43]]);
       }))();
     },
     // 生成取餐码（6位数字）

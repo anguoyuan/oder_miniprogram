@@ -343,7 +343,7 @@ export default {
 </script>
 <style>
 .profile-container {
-    background-color: #F5F0E8;
+    background-color: #f0f0f0;
     min-height: 100vh;
 }
 
@@ -461,7 +461,7 @@ export default {
 }
 
 .menu-item:active {
-    background-color: #faf6f0;
+    background-color: #f5f5f5;
 }
 
 .menu-icon {
@@ -483,7 +483,7 @@ export default {
 
 .menu-divider {
     height: 1rpx;
-    background-color: #F5F0E8;
+    background-color: #f0f0f0;
     margin: 0 24rpx;
 }
 
