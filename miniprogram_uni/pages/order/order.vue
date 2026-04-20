@@ -1,26 +1,12 @@
 <template>
     <!-- pages/order/order.wxml -->
     <view class="order-container">
+        <!-- 自定义导航栏 -->
+        <view class="custom-nav" :style="{ paddingTop: statusBarHeight + 'px', height: (statusBarHeight + 44) + 'px' }">
+            <text class="custom-nav-title">Order</text>
+        </view>
         <!-- 主体内容 -->
-        <view class="main-content">
-            <!-- 头部区域 -->
-            <view class="header-section">
-                <view class="welcome-text">
-                    <text class="welcome-title">{{ orderType === 'takeaway' ? '外卖点单' : '到店自取' }}</text>
-                    <text class="welcome-subtitle">精选好茶，为您而来</text>
-                </view>
-
-                <!-- 切换菜单 -->
-                <view class="switch-menu">
-                    <view :class="'switch-item ' + (orderType === 'pickup' ? 'active' : '')" @tap="switchOrderType" data-type="pickup">
-                        <text>自取</text>
-                    </view>
-                    <view :class="'switch-item ' + (orderType === 'takeaway' ? 'active' : '')" @tap="switchOrderType" data-type="takeaway">
-                        <text>外卖</text>
-                    </view>
-                </view>
-            </view>
-
+        <view class="main-content" :style="{ height: 'calc(100vh - ' + (statusBarHeight + 44) + 'px)' }">
             <!-- 主体内容区域 -->
             <view class="content-section">
                 <!-- 左侧分类导航 -->
@@ -51,7 +37,10 @@
 
                                 <view class="product-info">
                                     <view class="product-header">
-                                        <text class="product-name">{{ product.name }}</text>
+                                        <view class="product-name-wrap">
+                                            <text class="product-name">{{ product.name }}</text>
+                                            <text class="product-name-cn" v-if="product.description">{{ product.description }}</text>
+                                        </view>
                                         <view class="product-actions">
                                             <view class="action-icon" @tap.stop.prevent="toggleLike" :data-id="product.id">
                                                 <text :class="'icon-text ' + (product.isLiked ? 'liked' : '')">{{ product.isLiked ? '♥' : '♡' }}</text>
@@ -61,13 +50,9 @@
                                             </view>
                                         </view>
                                     </view>
-                                    <text class="product-desc">{{ product.desc }}</text>
-                                    <view class="product-tags">
-                                        <text class="product-tag" v-for="(tag, index2) in product.tags" :key="index2">{{ tag }}</text>
-                                    </view>
                                     <view class="product-bottom">
-                                        <text class="product-price">¥{{ product.price }}</text>
-                                        <view class="add-btn" @tap="selectProduct" :data-product="product">
+                                        <text class="product-price">${{ product.price }}</text>
+                                        <view class="add-btn" @tap="addToCart" :data-product="product">
                                             <text>+</text>
                                         </view>
                                     </view>
@@ -83,16 +68,16 @@
         <view class="cart-bottom" v-if="cartCount > 0">
             <view class="cart-info" @tap="showCart">
                 <view class="cart-icon-wrapper">
-                    <image src="/static/images/icon/diancan.png" class="cart-icon" />
+                    <image src="/static/images/icon/gouwuche.png" class="cart-icon" />
                     <view class="cart-badge">{{ cartCount }}</view>
                 </view>
                 <view class="cart-details">
-                    <text class="cart-count">{{ cartCount }}件商品</text>
-                    <text class="cart-total">¥{{ totalPrice }}</text>
+                    <text class="cart-count">{{ cartCount }} Item</text>
+                    <text class="cart-total">${{ totalPrice }}</text>
                 </view>
             </view>
             <view class="checkout-btn" @tap="checkout">
-                <text>去结算</text>
+                <text>Checkout</text>
             </view>
         </view>
 
@@ -103,7 +88,7 @@
                     <image :src="selectedProduct.image" class="spec-image" mode="aspectFill" />
                     <view class="spec-info">
                         <text class="spec-name">{{ selectedProduct.name }}</text>
-                        <text class="spec-price">¥{{ selectedProduct.price }}</text>
+                        <text class="spec-price">${{ selectedProduct.price }}</text>
                     </view>
                     <view class="close-btn" @tap="hideSpecModal">×</view>
                 </view>
@@ -188,7 +173,7 @@
                             <text class="cart-item-name">{{ item.name }}</text>
                             <text class="cart-item-specs">{{ item.specs.sugar }} {{ item.specs.temperature }} {{ item.specs.addOn }}</text>
                             <view class="cart-item-bottom">
-                                <text class="cart-item-price">¥{{ item.price }}</text>
+                                <text class="cart-item-price">${{ item.price }}</text>
                                 <view class="cart-quantity-control">
                                     <view class="cart-quantity-btn" @tap="updateCartQuantity" :data-cart-id="item.cartId" data-type="minus">-</view>
                                     <text class="cart-quantity-text">{{ item.quantity }}</text>
@@ -201,9 +186,9 @@
 
                 <view class="cart-footer">
                     <view class="cart-total-info">
-                        <text>合计：¥{{ totalPrice }}</text>
+                        <text>合计：${{ totalPrice }}</text>
                     </view>
-                    <view class="cart-checkout-btn" @tap="checkout">去结算</view>
+                    <view class="cart-checkout-btn" @tap="checkout">Checkout</view>
                 </view>
             </view>
         </view>
@@ -239,6 +224,7 @@ export default {
             cartCount: 0,
             totalPrice: 0,
             loading: true,
+            statusBarHeight: 0,
 
             // 规格选项
             sugarOptions: ['无糖', '少糖', '正常糖', '多糖'],
@@ -264,16 +250,11 @@ export default {
         };
     },
     onLoad() {
-        this.setData({
-            orderType: app.globalData.orderType || 'takeaway'
-        });
+        this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
         this.loadCategories();
         this.loadCart();
     },
     onShow() {
-        this.setData({
-            orderType: app.globalData.orderType || 'takeaway'
-        });
         this.loadCart();
     },
     methods: {
@@ -553,23 +534,6 @@ export default {
                 return;
             }
 
-            // 检查登录状态
-            if (!app.globalData.isLogin) {
-                uni.showModal({
-                    title: '请先登录',
-                    content: '需要登录后才能下单',
-                    confirmText: '去登录',
-                    success: (res) => {
-                        if (res.confirm) {
-                            uni.switchTab({
-                                url: '/pages/profile/profile'
-                            });
-                        }
-                    }
-                });
-                return;
-            }
-
             // 跳转到结算页面
             uni.navigateTo({
                 url: '/pages/checkout/checkout'
@@ -579,13 +543,6 @@ export default {
         // 切换点赞
         async toggleLike(e) {
             const productId = e.currentTarget.dataset.id;
-            if (!app.globalData.isLogin) {
-                uni.showToast({
-                    title: '请先登录',
-                    icon: 'none'
-                });
-                return;
-            }
             try {
                 // 找到当前商品
                 let product = null;
@@ -636,13 +593,6 @@ export default {
         // 切换收藏
         async toggleFavorite(e) {
             const productId = e.currentTarget.dataset.id;
-            if (!app.globalData.isLogin) {
-                uni.showToast({
-                    title: '请先登录',
-                    icon: 'none'
-                });
-                return;
-            }
             try {
                 // 找到当前商品
                 let product = null;
@@ -695,65 +645,30 @@ export default {
 <style>
 /* pages/order/order.wxss */
 .order-container {
-    background-color: #f8f8f8;
+    background-color: #ffffff;
     min-height: 100vh;
-    padding-bottom: 120rpx; /* 为底部购物车留出空间 */
+    padding-bottom: 120rpx;
+}
+
+.custom-nav {
+    background-color: #ffffff;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.custom-nav-title {
+    font-size: 34rpx;
+    font-weight: bold;
+    color: #333;
 }
 
 .main-content {
-    padding-top: 0rpx;
-    height: calc(100vh - 120rpx);
     display: flex;
     flex-direction: column;
 }
-
-/* 头部区域 */
-.header-section {
-    background-color: #fff;
-    padding: 30rpx 20rpx;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1rpx solid #f0f0f0;
-}
-
-.welcome-text {
-    flex: 1;
-}
-
-.welcome-title {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: #333;
-    display: block;
-    margin-bottom: 8rpx;
-}
-
-.welcome-subtitle {
-    font-size: 24rpx;
-    color: #999;
-}
-
-.switch-menu {
-    display: flex;
-    background-color: #f0f0f0;
-    border-radius: 50rpx;
-    padding: 4rpx;
-}
-
-.switch-item {
-    padding: 12rpx 24rpx;
-    border-radius: 50rpx;
-    font-size: 24rpx;
-    color: #666;
-    transition: all 0.3s ease;
-}
-
-.switch-item.active {
-    background-color: #f0f0f0;
-    color: #fff;
-}
-
 /* 主体内容区域 */
 .content-section {
     flex: 1;
@@ -765,7 +680,6 @@ export default {
 .category-nav {
     width: 200rpx;
     background-color: #f5f5f5;
-    border-right: 1rpx solid #e0e0e0;
 }
 
 .category-scroll {
@@ -777,7 +691,6 @@ export default {
     text-align: center;
     font-size: 28rpx;
     color: #666;
-    border-bottom: 1rpx solid #e0e0e0;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -792,8 +705,8 @@ export default {
 }
 
 .category-icon {
-    width: 40rpx;
-    height: 40rpx;
+    width: 50rpx;
+    height: 50rpx;
     margin-bottom: 8rpx;
     border-radius: 6rpx;
 }
@@ -809,28 +722,33 @@ export default {
 }
 
 .category-section {
-    padding: 20rpx;
+    padding: 0;
 }
 
 .category-title {
-    font-size: 32rpx;
+    font-size: 28rpx;
     font-weight: bold;
-    color: #333;
-    margin-bottom: 20rpx;
-    padding-left: 10rpx;
+    color: #999;
+    margin-bottom: 0;
+    padding: 16rpx 20rpx 8rpx;
  /*   border-left: 4rpx solid #8B5E3C; */
 }
 
-.product-item {
+/* .product-item {
     display: flex;
-    padding: 10rpx;
-    margin-bottom: 0rpx;
+    padding: 0 20rpx;
     background-color: transparent;
     border-radius: 0;
     box-shadow: none;
     transition: none;
-}
+} */
 
+.product-item {
+    display: flex;
+    padding: 15rpx 20rpx; /* 使用内边距来撑开点击空间，背景依然是连贯的 */
+    background-color: #ffffff; /* 确保背景是纯白 */
+    border-bottom: none;       /* 确保没有边框线 */
+}
 .product-item:active {
     transform: scale(0.98);
 }
@@ -839,14 +757,16 @@ export default {
     width: 120rpx;
     height: 120rpx;
     border-radius: 8rpx;
-    margin-right: 20rpx;
+    margin: 16rpx 20rpx 16rpx 0;
+    flex-shrink: 0;
 }
 
 .product-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 8rpx;
 }
 
 .product-header {
@@ -856,11 +776,22 @@ export default {
     margin-bottom: 8rpx;
 }
 
+.product-name-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .product-name {
     font-size: 28rpx;
     font-weight: bold;
     color: #333;
-    flex: 1;
+}
+
+.product-name-cn {
+    font-size: 22rpx;
+    color: #C9A84C;
+    margin-top: 0;
 }
 
 .product-actions {
@@ -891,9 +822,11 @@ export default {
 }
 
 .product-desc {
-    font-size: 24rpx;
-    color: #999;
-    margin-bottom: 8rpx;
+    font-size: 22rpx;
+    color: #bbb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .product-tags {
@@ -921,10 +854,10 @@ export default {
 .product-price {
     font-size: 25rpx;
     font-weight: bold;
-    color: #8B5E3C;
+    color: #000000;
 }
 
-.add-btn {
+/* .add-btn {
     width: 60rpx;
     height: 60rpx;
     background-color: #aad08f;
@@ -936,8 +869,41 @@ export default {
     font-size: 32rpx;
     font-weight: bold;
     transition: all 0.3s ease;
+} */
+.add-btn {
+    width: 32rpx;
+    height: 32rpx;
+    background-color: #5D3A1A; 
+    border-radius: 0;
+    position: relative;
+    margin-right: 20rpx;    /* 增加右边距，让它离边缘更远 */
+    margin-bottom: 4rpx;
+    flex-shrink: 0;
 }
 
+/* 2. 横线：长但不贯穿 */
+.add-btn::before {
+    content: '';
+    position: absolute;
+    width: 75%;             /* 改为 75%，两头就会留出空隙，不会切断方块 */
+    height: 3rpx;           /* 线条粗细 */
+    background-color: #ffffff;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* 同时水平垂直居中 */
+}
+
+/* 3. 竖线：长但不贯穿 */
+.add-btn::after {
+    content: '';
+    position: absolute;
+    width: 3rpx;            /* 线条粗细 */
+    height: 75%;            /* 改为 75%，上下就会留出空隙 */
+    background-color: #ffffff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%); /* 同时水平垂直居中 */
+}
 .add-btn:active {
     transform: scale(0.9);
 }
@@ -970,10 +936,10 @@ export default {
 }
 
 .cart-icon {
-    width: 60rpx;
-    height: 60rpx;
+    width: 40rpx;
+    height: 40rpx;
     padding: 10rpx;
-    background-color: #8B5E3C;
+    background-color: #5D3A1A;
     border-radius: 50%;
 }
 
@@ -1012,9 +978,9 @@ export default {
 }
 
 .checkout-btn {
-    background-color: #8B5E3C;
+    background-color: #5D3A1A;
     color: #fff;
-    border-radius: 50rpx;
+    border-radius: 0;
     padding: 20rpx 40rpx;
     font-size: 28rpx;
     font-weight: bold;

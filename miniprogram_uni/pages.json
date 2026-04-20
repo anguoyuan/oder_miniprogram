@@ -11,11 +11,6 @@
 		{
 			"path": "pages/order/order",
 			"style": {
-				"navigationBarTitleText": "点单",
-				"navigationStyle": "default",   // 点单页用系统导航栏
-				"navigationBarTitleText": "点单",
-				"navigationBarBackgroundColor": "#ffffff",
-				"navigationBarTextStyle": "black",
 				"backgroundColor": "#ffffff",
 				"usingComponents": {}
 			}

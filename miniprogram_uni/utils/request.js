@@ -1,5 +1,6 @@
 // utils/request.js - 统一请求封装
 const config = require('../config.js');
+const app = getApp;
 
 /**
  * 发送HTTP请求
@@ -29,6 +30,16 @@ function request(url, method = 'GET', data = {}, needAuth = true) {
             success: (res) => {
                 if (res.data.code === 200) {
                     resolve(res.data.data);
+                } else if (res.data.code === 401) {
+                    // token 过期或无效，静默清除登录态，当作游客继续
+                    uni.removeStorageSync('token');
+                    uni.removeStorageSync('userInfo');
+                    const globalData = app() && app().globalData;
+                    if (globalData) {
+                        globalData.isLogin = false;
+                        globalData.userInfo = null;
+                    }
+                    reject(res.data);
                 } else {
                     uni.showToast({
                         title: res.data.message || '请求失败',

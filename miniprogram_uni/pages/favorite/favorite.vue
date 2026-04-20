@@ -9,7 +9,7 @@
                     <text class="item-name">{{ item.productName }}</text>
                     <text class="item-desc" v-if="item.productDescription">{{ item.productDescription }}</text>
                     <view class="item-bottom">
-                        <text class="item-price">¥{{ item.productPrice }}</text>
+                        <text class="item-price">${{ item.productPrice }}</text>
                         <view class="item-actions">
                             <view class="action-btn add-cart" @tap.stop.prevent="addToCart" :data-product="item">
                                 <text>加入购物车</text>

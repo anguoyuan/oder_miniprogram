@@ -114,6 +114,9 @@ class OrderController {
   static async getUserOrders(req, res) {
     try {
       const userId = req.userId;
+      if (!userId) {
+        return res.json(page([], 0));
+      }
       const { status, page: pageNum = 1, pageSize = 10 } = req.query;
       
       const result = await OrderModel.getUserOrders(

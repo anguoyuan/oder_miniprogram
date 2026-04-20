@@ -61,5 +61,24 @@ const adminAuth = (req, res, next) => {
   }
 };
 
-module.exports = { auth, adminAuth };
+/**
+ * 可选认证中间件（无 token 时用 guestId）
+ */
+const optionalAuth = (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      const decoded = jwt.verify(token, config.jwt.secret);
+      req.userId = decoded.userId;
+      req.user = decoded;
+    } else {
+      req.userId = req.body.guestId || req.query.guestId || null;
+    }
+  } catch (error) {
+    req.userId = req.body.guestId || req.query.guestId || null;
+  }
+  next();
+};
+
+module.exports = { auth, adminAuth, optionalAuth };
 

@@ -1,139 +1,79 @@
 <template>
-    <!-- pages/profile/profile.wxml -->
     <view class="profile-container">
-        <!-- 主体内容 -->
-        <view class="main-content">
-            <!-- 用户信息区域 -->
-            <view class="user-section">
-                <view v-if="isLogin" class="user-info card">
-                    <image :src="userInfo.avatar" class="user-avatar" />
-                    <view class="user-details">
-                        <text class="user-name">{{ userInfo.nickname }}</text>
-                        <text class="user-level">普通会员</text>
-                    </view>
-                    <view class="user-actions">
-                        <view class="edit-btn" @tap="goToEditProfile">
-                            <text>✏️</text>
-                        </view>
-                        <view class="logout-btn" @tap="handleLogout">
-                            <text>退出</text>
-                        </view>
+        <scroll-view scroll-y class="scroll-wrap" :style="{ paddingTop: (statusBarHeight + 20) + 'px' }">
+
+            <!-- 用户信息头部 -->
+            <view class="user-header">
+                <view class="user-left">
+                    <image :src="isLogin ? userInfo.avatar : '/static/images/icon/wode.png'" class="user-avatar" />
+                    <view class="user-info-text">
+                        <text class="user-name">{{ isLogin ? userInfo.nickname : 'Hello, Guest' }}</text>
+                        <text class="user-sub">{{ isLogin ? '已登录' : '点击登录' }}</text>
                     </view>
                 </view>
-
-                <view v-else class="login-section card">
-                    <view class="login-prompt" @tap="handleLogin">
-                        <image src="/static/images/icon/wode.png" class="default-avatar" />
-                        <view class="login-text">
-                            <text class="login-title">一键登录</text>
-                            <text class="login-subtitle">登录享受更多优惠</text>
-                        </view>
-                        <view class="login-arrow">></view>
+                <view class="user-right">
+                    <view class="logout-btn" v-if="isLogin" @tap="handleLogout">
+                        <text class="logout-text">退出</text>
+                    </view>
+                    <view class="login-btn" v-else @tap="handleLogin">
+                        <text class="login-btn-text">登录</text>
                     </view>
                 </view>
             </view>
 
-            <!-- 统计信息 -->
-            <view v-if="isLogin" class="stats-section card">
-                <view class="stats-item" @tap="goToOrders">
-                    <text class="stats-number">{{ orderCount }}</text>
-                    <text class="stats-label">订单数量</text>
+            <!-- MY ACCOUNT -->
+            <view class="section-title">MY ACCOUNT</view>
+            <view class="stats-row">
+                <view class="stats-card" @tap="goToOrders">
+                    <text class="stats-num">{{ orderCount }}</text>
+                    <text class="stats-label">ORDERS</text>
                 </view>
-                <view class="stats-divider"></view>
-                <view class="stats-item">
-                    <text class="stats-number">¥{{ totalSpent }}</text>
-                    <text class="stats-label">累计消费</text>
-                </view>
-            </view>
-
-            <!-- 菜单列表 -->
-            <view class="menu-section">
-                <view class="menu-group card">
-                    <view class="menu-item" @tap="goToOrders">
-                        <view class="menu-icon">
-                            <image src="/static/images/me/wodedingdan.png" class="icon" />
-                        </view>
-                        <text class="menu-text">我的订单</text>
-                        <view class="menu-arrow">></view>
-                    </view>
-
-                    <view class="menu-divider"></view>
-
-                    <!-- <view class="menu-item" bindtap="goToCart">
-          <view class="menu-icon">
-            <image src="/static/images/icon/diancan.png" class="icon"/>
-          </view>
-          <text class="menu-text">购物车</text>
-          <view class="menu-arrow">></view>
-        </view> -->
-
-                    <view class="menu-divider"></view>
-
-                    <view class="menu-item" @tap="goToFavorite">
-                        <view class="menu-icon">
-                            <image src="/static/images/me/huiyuan.png" class="icon" />
-                        </view>
-                        <text class="menu-text">我的收藏</text>
-                        <view class="menu-arrow">></view>
-                    </view>
-
-                    <view class="menu-divider"></view>
-
-                    <view class="menu-item" @tap="goToLikes">
-                        <view class="menu-icon">
-                            <image src="/static/images/me/dianzan.png" class="icon" />
-                        </view>
-                        <text class="menu-text">我的点赞</text>
-                        <view class="menu-arrow">></view>
-                    </view>
-
-                    <view class="menu-divider"></view>
-
-                    <view class="menu-item" @tap="handleMenuClick" data-type="address">
-                        <view class="menu-icon">
-                            <image src="/static/images/me/shouhuodizhi.png" class="icon" />
-                        </view>
-                        <text class="menu-text">收货地址</text>
-                        <view class="menu-arrow">></view>
-                    </view>
-                </view>
-
-                <view class="menu-group card">
-                    <view class="menu-item" @tap="handleMenuClick" data-type="usage">
-                        <view class="menu-icon">
-                            <image src="/static/images/me/使用须知.png" class="icon" />
-                        </view>
-                        <text class="menu-text">使用须知</text>
-                        <view class="menu-arrow">></view>
-                    </view>
-
-                    <view class="menu-divider"></view>
-
-                    <view class="menu-item" @tap="handleMenuClick" data-type="privacy">
-                        <view class="menu-icon">
-                            <image src="/static/images/me/yinsi.png" class="icon" />
-                        </view>
-                        <text class="menu-text">隐私条款</text>
-                        <view class="menu-arrow">></view>
-                    </view>
-
-                    <view class="menu-divider"></view>
-
-                    <view class="menu-item" @tap="handleMenuClick" data-type="recruitment">
-                        <view class="menu-icon">
-                            <image src="/static/images/me/yuangongzhaopin.png" class="icon" />
-                        </view>
-                        <text class="menu-text">员工招聘</text>
-                        <view class="menu-arrow">></view>
-                    </view>
+                <view class="stats-card">
+                    <text class="stats-num">${{ totalSpent }}</text>
+                    <text class="stats-label">TOTAL SPENT</text>
                 </view>
             </view>
 
-            <!-- 版本信息 -->
+            <!-- 菜单 -->
+            <view class="menu-group">
+                <view class="menu-item" @tap="goToOrders">
+                    <image src="/static/images/me/wodedingdan.png" class="menu-icon" />
+                    <text class="menu-text">我的订单</text>
+                    <text class="menu-arrow">›</text>
+                </view>
+                <view class="menu-divider" />
+                <view class="menu-item" @tap="handleMenuClick" data-type="address">
+                    <image src="/static/images/me/shouhuodizhi.png" class="menu-icon" />
+                    <text class="menu-text">收货地址</text>
+                    <text class="menu-arrow">›</text>
+                </view>
+            </view>
+
+            <view class="menu-group" style="margin-top: 20rpx;">
+                <view class="menu-item" @tap="handleMenuClick" data-type="usage">
+                    <image src="/static/images/me/使用须知.png" class="menu-icon" />
+                    <text class="menu-text">使用须知</text>
+                    <text class="menu-arrow">›</text>
+                </view>
+                <view class="menu-divider" />
+                <view class="menu-item" @tap="handleMenuClick" data-type="privacy">
+                    <image src="/static/images/me/yinsi.png" class="menu-icon" />
+                    <text class="menu-text">隐私条款</text>
+                    <text class="menu-arrow">›</text>
+                </view>
+                <view class="menu-divider" />
+                <view class="menu-item" @tap="handleMenuClick" data-type="recruitment">
+                    <image src="/static/images/me/yuangongzhaopin.png" class="menu-icon" />
+                    <text class="menu-text">员工招聘</text>
+                    <text class="menu-arrow">›</text>
+                </view>
+            </view>
+
             <view class="version-info">
-                <text class="version-text">一厘米 v1.0.0</text>
+                <text class="version-text">v1.0.0</text>
             </view>
-        </view>
+
+        </scroll-view>
     </view>
 </template>
 
@@ -147,10 +87,12 @@ export default {
             userInfo: null,
             orderCount: 0,
             totalSpent: '0.00',
-            likeCount: 0
+            likeCount: 0,
+            statusBarHeight: 0
         };
     },
     onLoad() {
+        this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
         this.checkLoginStatus();
     },
     onShow() {
@@ -400,216 +342,158 @@ export default {
 };
 </script>
 <style>
-/* pages/profile/profile.wxss */
 .profile-container {
-    background-color: #f8f8f8;
+    background-color: #F5F0E8;
     min-height: 100vh;
 }
 
-.main-content {
-    padding-top: 10rpx;
-    padding-bottom: 20rpx;
+.scroll-wrap {
+    height: 100vh;
+    padding-bottom: 40rpx;
 }
 
-/* 用户信息区域 */
-.user-section {
-    margin: 20rpx 20rpx 30rpx;
-}
-
-.user-info {
+/* 用户头部 */
+.user-header {
     display: flex;
     align-items: center;
-    padding: 30rpx;
+    justify-content: space-between;
+    padding: 20rpx 30rpx 30rpx;
+}
+
+.user-left {
+    display: flex;
+    align-items: center;
 }
 
 .user-avatar {
-    width: 120rpx;
-    height: 120rpx;
+    width: 100rpx;
+    height: 100rpx;
     border-radius: 50%;
     margin-right: 20rpx;
-}
-
-.user-details {
-    flex: 1;
 }
 
 .user-name {
     font-size: 32rpx;
     font-weight: bold;
-    color: #333;
-    margin-bottom: 8rpx;
+    color: #2C1810;
     display: block;
+    margin-bottom: 6rpx;
 }
 
-.user-level {
+.user-sub {
+    font-size: 22rpx;
+    color: #9B7B5B;
+}
+
+.logout-btn, .login-btn {
+    padding: 12rpx 28rpx;
+    border: 2rpx solid #5D3A1A;
+    border-radius: 40rpx;
+}
+
+.logout-text, .login-btn-text {
     font-size: 24rpx;
-    color: #aad08f;
-    background-color: #fff3e0;
-    padding: 4rpx 12rpx;
+    color: #5D3A1A;
+}
+
+/* 会员卡 */
+.member-card {
+    margin: 0 24rpx 30rpx;
     border-radius: 20rpx;
-    display: inline-block;
+    overflow: hidden;
+    box-shadow: 0 8rpx 24rpx rgba(93,58,26,0.15);
 }
 
-.user-actions {
-    display: flex;
-    gap: 10rpx;
-}
-
-.edit-btn {
-    padding: 16rpx 20rpx;
-    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
-    color: #fff;
-    border-radius: 50rpx;
-    font-size: 28rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.logout-btn {
-    padding: 16rpx 24rpx;
-    background-color: #f0f0f0;
-    border-radius: 50rpx;
-    font-size: 24rpx;
-    color: #666;
-}
-
-/* 登录区域 */
-.login-section {
-    padding: 30rpx;
-}
-
-.login-prompt {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-.default-avatar {
-    width: 120rpx;
-    height: 120rpx;
-    border-radius: 50%;
-    margin-right: 20rpx;
-    opacity: 0.8;
-}
-
-.login-text {
-    flex: 1;
-}
-
-.login-title {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8rpx;
+.member-card-img {
+    width: 100%;
+    height: 280rpx;
     display: block;
 }
 
-.login-subtitle {
-    font-size: 24rpx;
-    color: #999;
-}
-
-.login-arrow {
-    font-size: 32rpx;
-    color: #ccc;
-}
-
-/* 统计信息 */
-.stats-section {
-    margin: 0 20rpx 30rpx;
-    padding: 30rpx;
-    display: flex;
-    align-items: center;
-}
-
-.stats-item {
-    flex: 1;
-    text-align: center;
-    cursor: pointer;
-}
-
-.stats-number {
-    font-size: 36rpx;
+/* MY ACCOUNT */
+.section-title {
+    font-size: 26rpx;
     font-weight: bold;
-    color: #aad08f;
+    color: #9B7B5B;
+    letter-spacing: 3rpx;
+    padding: 0 30rpx 16rpx;
+}
+
+.stats-row {
+    display: flex;
+    gap: 20rpx;
+    padding: 0 24rpx 30rpx;
+}
+
+.stats-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 16rpx;
+    padding: 28rpx 24rpx;
+}
+
+.stats-num {
+    font-size: 44rpx;
+    font-weight: bold;
+    color: #2C1810;
     display: block;
     margin-bottom: 8rpx;
 }
 
 .stats-label {
-    font-size: 24rpx;
-    color: #666;
+    font-size: 20rpx;
+    color: #9B7B5B;
+    letter-spacing: 1rpx;
 }
 
-.stats-divider {
-    width: 1rpx;
-    height: 60rpx;
-    background-color: #e0e0e0;
-}
-
-/* 菜单区域 */
-.menu-section {
-    padding: 0 20rpx;
-}
-
+/* 菜单 */
 .menu-group {
-    margin-bottom: 30rpx;
-    padding: 0;
+    background: #fff;
+    border-radius: 16rpx;
+    margin: 0 24rpx;
     overflow: hidden;
 }
 
 .menu-item {
     display: flex;
     align-items: center;
-    padding: 30rpx;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    padding: 28rpx 24rpx;
 }
 
 .menu-item:active {
-    background-color: #f8f8f8;
+    background-color: #faf6f0;
 }
 
 .menu-icon {
-    width: 60rpx;
-    height: 60rpx;
-    margin-right: 20rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.icon {
     width: 40rpx;
     height: 40rpx;
+    margin-right: 20rpx;
 }
 
 .menu-text {
     flex: 1;
     font-size: 28rpx;
-    color: #333;
+    color: #2C1810;
 }
 
 .menu-arrow {
-    font-size: 28rpx;
-    color: #ccc;
+    font-size: 36rpx;
+    color: #C4A882;
 }
 
 .menu-divider {
     height: 1rpx;
-    background-color: #f0f0f0;
-    margin: 0 30rpx;
+    background-color: #F5F0E8;
+    margin: 0 24rpx;
 }
 
-/* 版本信息 */
 .version-info {
     text-align: center;
     padding: 40rpx 20rpx;
 }
 
 .version-text {
-    font-size: 24rpx;
-    color: #999;
+    font-size: 22rpx;
+    color: #C4A882;
 }
 </style>

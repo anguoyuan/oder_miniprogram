@@ -14,7 +14,7 @@
             <view class="product-info card">
                 <view class="product-header">
                     <view class="product-title">{{ product.name }}</view>
-                    <view class="product-price">¥{{ product.price }}</view>
+                    <view class="product-price">${{ product.price }}</view>
                 </view>
                 <view class="product-desc">{{ product.description }}</view>
 
@@ -238,6 +238,7 @@ export default {
             const cartItem = {
                 id: this.product.id,
                 name: this.product.name,
+                description: this.product.description,
                 image: this.product.image,
                 price: this.product.price,
                 quantity: 1,

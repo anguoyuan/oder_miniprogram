@@ -17,7 +17,7 @@
                     <view class="product-info">
                         <view class="product-name">{{ item.productName }}</view>
                         <view class="product-desc">销量: {{ item.productSales || 0 }}</view>
-                        <view class="product-price">¥{{ item.productPrice }}</view>
+                        <view class="product-price">${{ item.productPrice }}</view>
                     </view>
                 </view>
 

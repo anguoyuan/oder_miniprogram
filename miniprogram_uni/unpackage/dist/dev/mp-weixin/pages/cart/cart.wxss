@@ -325,23 +325,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* pages/cart/cart.wxss */
 .cart-container {
     min-height: 100vh;

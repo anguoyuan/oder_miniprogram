@@ -97,7 +97,7 @@ function clearCart() {
  * 创建订单
  */
 function createOrder(data) {
-    return request.post('/order/create', data);
+    return request.post('/order/create', data, false);
 }
 
 /**

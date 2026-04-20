@@ -1,26 +1,29 @@
 <template>
     <!-- pages/orderList/orderList.wxml -->
     <view class="order-list-container">
-        <!-- 主体内容 -->
-        <view class="main-content">
-            <!-- 切换菜单 -->
+        <!-- 顶部标题 + tab 一体 -->
+        <view class="page-header" :style="{ paddingTop: (statusBarHeight + 6) + 'px' }">
+            <text class="page-title">ORDER HISTORY</text>
             <view class="tab-section">
                 <view :class="'tab-item ' + (currentTab === 'all' ? 'active' : '')" @tap="switchTab" data-tab="all">
-                    <text>全部订单</text>
+                    <text>All</text>
                 </view>
                 <view :class="'tab-item ' + (currentTab === 'pending' ? 'active' : '')" @tap="switchTab" data-tab="pending">
-                    <text>待处理</text>
+                    <text>Preparing</text>
                 </view>
-                <view :class="'tab-item ' + (currentTab === 'preparing' ? 'active' : '')" @tap="switchTab" data-tab="preparing">
+                <!-- <view :class="'tab-item ' + (currentTab === 'preparing' ? 'active' : '')" @tap="switchTab" data-tab="preparing">
                     <text>制作中</text>
                 </view>
                 <view :class="'tab-item ' + (currentTab === 'ready' ? 'active' : '')" @tap="switchTab" data-tab="ready">
                     <text>待取餐</text>
-                </view>
+                </view> -->
                 <view :class="'tab-item ' + (currentTab === 'completed' ? 'active' : '')" @tap="switchTab" data-tab="completed">
-                    <text>已完成</text>
+                    <text>Finished</text>
                 </view>
             </view>
+        </view>
+        <!-- 主体内容 -->
+        <view class="main-content">
 
             <!-- 订单列表 -->
             <view class="order-content">
@@ -46,7 +49,7 @@
                                     <text class="product-name">{{ product.productName }}</text>
                                     <text class="product-specs" v-if="product.specs">{{ product.specs }}</text>
                                     <view class="product-bottom">
-                                        <text class="product-price">¥{{ product.price }}</text>
+                                        <text class="product-price">${{ product.price }}</text>
                                         <text class="product-quantity">x{{ product.quantity }}</text>
                                     </view>
                                 </view>
@@ -54,7 +57,7 @@
                         </view>
 
                         <view class="order-footer">
-                            <text class="order-total">合计：¥{{ item.totalPrice }}</text>
+                            <text class="order-total">合计：${{ item.totalPrice }}</text>
                             <view class="order-actions">
                                 <view v-if="item.status === 'pending' || item.status === 'preparing'" class="action-btn cancel-btn" @tap="cancelOrder" :data-id="item.id">
                                     取消订单
@@ -82,9 +85,8 @@
 
                 <!-- 订单为空 -->
                 <view v-else class="empty-state">
-                    <image src="/static/images/icon/qucan.png" class="empty-image" />
-                    <text class="empty-text">暂无订单</text>
-                    <view class="go-order-btn" @tap="goOrder">去点单</view>
+                    <text class="empty-text">No orders yet</text>
+                    <view class="go-order-btn" @tap="goOrder">Order Now</view>
                 </view>
             </view>
         </view>
@@ -100,6 +102,7 @@ export default {
             currentTab: 'all',
             orders: [],
             loading: false,
+            statusBarHeight: 0,
 
             product: {
                 productImage: '',
@@ -111,33 +114,20 @@ export default {
         };
     },
     onLoad() {
-        if (!this.checkLoginStatus()) return;
+        this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
         this.loadOrders();
     },
     onShow() {
-        if (!this.checkLoginStatus()) return;
         this.loadOrders();
     },
     // 下拉刷新
     onPullDownRefresh() {
-        if (!this.checkLoginStatus()) return;
         this.loadOrders();
         setTimeout(() => {
             uni.stopPullDownRefresh();
         }, 1000);
     },
     methods: {
-        checkLoginStatus() {
-            const userInfo = uni.getStorageSync('userInfo');
-            if (!userInfo) {
-                uni.showToast({
-                    title: '请先登录',
-                    icon: 'none'
-                });
-                return false;
-            }
-            return true;
-        },
         // 从后端加载订单列表
         async loadOrders() {
             try {
@@ -150,11 +140,11 @@ export default {
 
                 // 根据选项卡加载不同状态的订单
                 const status = this.currentTab === 'all' ? '' : this.currentTab;
-                const result = await api.getUserOrders({
-                    status: status,
-                    page: 1,
-                    pageSize: 50
-                });
+                const params = { status, page: 1, pageSize: 50 };
+                if (!app.globalData.isLogin) {
+                    params.guestId = app.globalData.guestId;
+                }
+                const result = await api.getUserOrders(params);
 
                 // 处理订单数据，添加评价状态
                 const orders = await Promise.all(
@@ -190,26 +180,6 @@ export default {
                 uni.hideLoading();
                 console.error('加载订单失败', error);
 
-                // 如果是未登录错误，跳转到首页登录
-                if (error && error.code === 401) {
-                    uni.showModal({
-                        title: '提示',
-                        content: '请先登录',
-                        confirmText: '去登录',
-                        success: (res) => {
-                            if (res.confirm) {
-                                uni.switchTab({
-                                    url: '/pages/index/index'
-                                });
-                            }
-                        }
-                    });
-                } else {
-                    uni.showToast({
-                        title: '加载订单失败',
-                        icon: 'none'
-                    });
-                }
                 this.setData({
                     loading: false
                 });
@@ -400,8 +370,23 @@ export default {
     min-height: 100vh;
 }
 
+.page-header {
+    background-color: #ffffff;
+    padding: 0 30rpx 0;
+    border-bottom: 1rpx solid #e8e8e8;
+}
+
+.page-title {
+    font-size: 44rpx;
+    font-weight: bold;
+    color: #000000;
+    letter-spacing: 2rpx;
+    display: block;
+    margin-bottom: 24rpx;
+}
+
 .main-content {
-    padding-top: 10rpx;
+    padding-top: 0;
     padding-bottom: 20rpx;
 }
 
@@ -409,26 +394,20 @@ export default {
 .tab-section {
     display: flex;
     background-color: #fff;
-    margin: 20rpx;
-    border-radius: 50rpx;
-    padding: 6rpx;
-    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .tab-item {
-    flex: 1;
-    text-align: center;
-    padding: 20rpx;
-    border-radius: 50rpx;
-    font-size: 24rpx;
-    color: #666;
-    transition: all 0.3s ease;
+    padding: 16rpx 24rpx;
+    font-size: 26rpx;
+    color: #999;
+    border-bottom: 4rpx solid transparent;
+    transition: all 0.2s ease;
 }
 
 .tab-item.active {
-    background-color: #aad08f;
-    color: #fff;
+    color: #5D3A1A;
     font-weight: bold;
+    border-bottom: 4rpx solid #5D3A1A;
 }
 
 /* 订单状态样式 */
@@ -661,9 +640,9 @@ export default {
 }
 
 .go-order-btn {
-    background-color: #aad08f;
+    background-color: #5D3A1A;
     color: #fff;
-    border-radius: 50rpx;
+    border-radius: 0;
     padding: 20rpx 60rpx;
     font-size: 28rpx;
     font-weight: bold;

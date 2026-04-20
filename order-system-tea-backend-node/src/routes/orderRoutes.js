@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const OrderController = require('../controllers/orderController');
-const { auth, adminAuth } = require('../middleware/auth');
+const { auth, adminAuth, optionalAuth } = require('../middleware/auth');
 
 // 用户端接口
-router.post('/create', auth, OrderController.createOrder);
+router.post('/create', optionalAuth, OrderController.createOrder);
 router.get('/detail/:orderId', auth, OrderController.getOrderDetail);
-router.get('/user-orders', auth, OrderController.getUserOrders);
+router.get('/user-orders', optionalAuth, OrderController.getUserOrders);
 router.put('/cancel/:orderId', auth, OrderController.cancelOrder);
 
 // 管理端接口

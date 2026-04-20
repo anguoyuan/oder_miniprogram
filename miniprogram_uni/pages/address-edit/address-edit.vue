@@ -14,19 +14,22 @@
                 <input class="form-input" placeholder="请输入手机号" :value="phone" @input="inputPhone" type="number" maxlength="11" />
             </view>
 
-            <!-- 选择位置 -->
-            <view class="form-item form-item-button">
-                <text class="form-label">选择位置</text>
-                <button class="location-button" @tap="chooseLocation">
-                    <text class="location-icon">📍</text>
-                    <text>{{ latitude && longitude ? '重新选择位置' : '点击选择位置' }}</text>
-                </button>
+            <!-- 省 -->
+            <view class="form-item">
+                <text class="form-label">省/州</text>
+                <input class="form-input" placeholder="请输入省/州" :value="province" @input="inputProvince" maxlength="50" />
             </view>
 
-            <!-- 省市区选择 -->
+            <!-- 市 -->
             <view class="form-item">
-                <text class="form-label">所在地区</text>
-                <view class="region-display">{{ regions[0] }} {{ regions[1] }} {{ regions[2] }}</view>
+                <text class="form-label">城市</text>
+                <input class="form-input" placeholder="请输入城市" :value="city" @input="inputCity" maxlength="50" />
+            </view>
+
+            <!-- 区 -->
+            <view class="form-item">
+                <text class="form-label">区/县</text>
+                <input class="form-input" placeholder="请输入区/县（选填）" :value="district" @input="inputDistrict" maxlength="50" />
             </view>
 
             <!-- 详细地址 -->
@@ -84,10 +87,13 @@ export default {
         // 加载地址详情
         async loadAddressDetail(addressId) {
             try {
-                uni.showLoading({
-                    title: '加载中...'
-                });
-                const addressList = await api.getAddressList();
+                uni.showLoading({ title: '加载中...' });
+                let addressList;
+                if (!app.globalData.isLogin) {
+                    addressList = uni.getStorageSync('guestAddresses') || [];
+                } else {
+                    addressList = await api.getAddressList();
+                }
                 const address = addressList.find((item) => item.id == addressId);
                 if (address) {
                     this.setData({
@@ -129,62 +135,25 @@ export default {
             });
         },
 
-        // 选择省市区
-        regionChange(e) {
-            const regions = e.detail.value;
-            this.setData({
-                regions: regions,
-                province: regions[0],
-                city: regions[1],
-                district: regions[2]
-            });
+        // 输入省
+        inputProvince(e) {
+            this.setData({ province: e.detail.value });
+        },
+
+        // 输入城市
+        inputCity(e) {
+            this.setData({ city: e.detail.value });
+        },
+
+        // 输入区县
+        inputDistrict(e) {
+            this.setData({ district: e.detail.value });
         },
 
         // 输入详细地址
         inputDetail(e) {
             this.setData({
                 detail: e.detail.value
-            });
-        },
-
-        // 选择位置
-        chooseLocation() {
-            uni.chooseLocation({
-                success: (res) => {
-                    console.log('选择的位置:', res);
-                    this.setData({
-                        province: res.address.split(/省|市|区|县/)[0] + '省',
-                        city: res.address.split(/省|市/)[1]?.split(/区|县/)[0] + '市' || '',
-                        district: res.address.split(/区|县/)[0].split(/市/)[1] + '区' || '',
-                        detail: res.name || res.address,
-                        latitude: res.latitude,
-                        longitude: res.longitude,
-                        regions: [
-                            res.address.split(/省|市|区|县/)[0] + '省',
-                            res.address.split(/省|市/)[1]?.split(/区|县/)[0] + '市' || '请选择',
-                            res.address.split(/区|县/)[0].split(/市/)[1] + '区' || '请选择'
-                        ]
-                    });
-                    uni.showToast({
-                        title: '位置已选择',
-                        icon: 'success'
-                    });
-                },
-                fail: (err) => {
-                    console.error('选择位置失败', err);
-                    if (err.errMsg.indexOf('auth deny') !== -1) {
-                        uni.showModal({
-                            title: '提示',
-                            content: '需要授权位置权限才能选择地址',
-                            confirmText: '去设置',
-                            success: (res) => {
-                                if (res.confirm) {
-                                    uni.openSetting();
-                                }
-                            }
-                        });
-                    }
-                }
             });
         },
 
@@ -206,17 +175,7 @@ export default {
                 return;
             }
             if (!this.phone) {
-                uni.showToast({
-                    title: '请输入手机号',
-                    icon: 'none'
-                });
-                return;
-            }
-            if (!/^1[3-9]\d{9}$/.test(this.phone)) {
-                uni.showToast({
-                    title: '手机号格式不正确',
-                    icon: 'none'
-                });
+                uni.showToast({ title: '请输入手机号', icon: 'none' });
                 return;
             }
             if (!this.province || this.province === '请选择') {
@@ -233,13 +192,6 @@ export default {
                 });
                 return;
             }
-            if (!this.latitude || !this.longitude) {
-                uni.showToast({
-                    title: '请选择地址位置',
-                    icon: 'none'
-                });
-                return;
-            }
             const addressData = {
                 name: this.name,
                 phone: this.phone,
@@ -252,31 +204,33 @@ export default {
                 isDefault: this.isDefault
             };
             try {
-                uni.showLoading({
-                    title: '保存中...'
-                });
-                if (this.isEdit) {
+                uni.showLoading({ title: '保存中...' });
+                if (!app.globalData.isLogin) {
+                    let list = uni.getStorageSync('guestAddresses') || [];
+                    if (this.isEdit) {
+                        addressData.id = this.addressId;
+                        list = list.map(a => a.id == this.addressId ? { ...a, ...addressData } : a);
+                    } else {
+                        addressData.id = Date.now();
+                        if (addressData.isDefault || list.length === 0) {
+                            list = list.map(a => ({ ...a, isDefault: false }));
+                            addressData.isDefault = true;
+                        }
+                        list.push(addressData);
+                    }
+                    uni.setStorageSync('guestAddresses', list);
+                } else if (this.isEdit) {
                     addressData.id = this.addressId;
                     await api.updateAddress(addressData);
                 } else {
                     await api.addAddress(addressData);
                 }
                 uni.hideLoading();
-                uni.showToast({
-                    title: '保存成功',
-                    icon: 'success'
-                });
-                setTimeout(() => {
-                    uni.navigateBack();
-                }, 1500);
+                uni.showToast({ title: '保存成功', icon: 'success' });
+                setTimeout(() => { uni.navigateBack(); }, 1500);
             } catch (error) {
-                console.log('CatchClause', error);
-                console.log('CatchClause', error);
                 uni.hideLoading();
-                uni.showToast({
-                    title: '保存失败',
-                    icon: 'none'
-                });
+                uni.showToast({ title: '保存失败', icon: 'none' });
             }
         }
     }

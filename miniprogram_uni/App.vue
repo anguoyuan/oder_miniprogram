@@ -27,80 +27,25 @@ export default {
         },
 
         // 添加到购物车
-        async addToCart(item) {
+        addToCart(item) {
             const existIndex = this.cart.findIndex((cartItem) => cartItem.id === item.id && JSON.stringify(cartItem.specs) === JSON.stringify(item.specs));
             if (existIndex >= 0) {
                 this.cart[existIndex].quantity += item.quantity;
-                // 如果已登录，同步到后端
-                if (this.isLogin) {
-                    try {
-                        const api = require('./utils/api.js');
-                        await api.updateCartQuantity({
-                            cartId: this.cart[existIndex].cartId,
-                            quantity: this.cart[existIndex].quantity
-                        });
-                    } catch (error) {
-                        console.log('CatchClause', error);
-                        console.log('CatchClause', error);
-                        console.error('同步购物车到后端失败', error);
-                    }
-                }
             } else {
                 const newCartId = Date.now() + Math.random();
-                this.cart.push({
-                    ...item,
-                    cartId: newCartId
-                });
-
-                // 如果已登录，同步到后端
-                if (this.isLogin) {
-                    try {
-                        const api = require('./utils/api.js');
-                        await api.addToCart({
-                            productId: item.id,
-                            quantity: item.quantity,
-                            specs: JSON.stringify(item.specs)
-                        });
-                    } catch (error) {
-                        console.log('CatchClause', error);
-                        console.log('CatchClause', error);
-                        console.error('同步购物车到后端失败', error);
-                    }
-                }
+                this.cart.push({ ...item, cartId: newCartId });
             }
             uni.setStorageSync('cart', this.cart);
         },
 
         // 从购物车移除
-        async removeFromCart(cartId) {
-            // 如果已登录，同步到后端
-            if (this.isLogin) {
-                try {
-                    const api = require('./utils/api.js');
-                    await api.removeCartItem(cartId);
-                } catch (error) {
-                    console.log('CatchClause', error);
-                    console.log('CatchClause', error);
-                    console.error('删除购物车商品失败', error);
-                }
-            }
+        removeFromCart(cartId) {
             this.cart = this.cart.filter((item) => item.cartId !== cartId);
             uni.setStorageSync('cart', this.cart);
         },
 
         // 清空购物车
-        async clearCart() {
-            // 如果已登录，同步到后端
-            if (this.isLogin) {
-                try {
-                    const api = require('./utils/api.js');
-                    await api.clearCart();
-                } catch (error) {
-                    console.log('CatchClause', error);
-                    console.log('CatchClause', error);
-                    console.error('清空购物车失败', error);
-                }
-            }
+        clearCart() {
             this.cart = [];
             uni.setStorageSync('cart', this.cart);
         },
@@ -140,7 +85,14 @@ export default {
             this.globalData.userInfo = userInfo;
         }
         this.globalData.cart = cart;
-        console.log('小程序启动，登录状态:', this.globalData.isLogin);
+
+        // 生成或读取匿名用户ID（9位数字，以9开头区分真实用户）
+        let guestId = uni.getStorageSync('guestId');
+        if (!guestId) {
+            guestId = 9 * 100000000 + Math.floor(Math.random() * 100000000);
+            uni.setStorageSync('guestId', guestId);
+        }
+        this.globalData.guestId = guestId;
     }
 };
 </script>

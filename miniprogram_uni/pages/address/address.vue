@@ -75,40 +75,19 @@ export default {
         // 加载地址列表
         async loadAddressList() {
             if (!app.globalData.isLogin) {
-                uni.showModal({
-                    title: '提示',
-                    content: '请先登录',
-                    confirmText: '去登录',
-                    success: (res) => {
-                        if (res.confirm) {
-                            uni.switchTab({
-                                url: '/pages/index/index'
-                            });
-                        }
-                    }
-                });
+                const local = uni.getStorageSync('guestAddresses') || [];
+                this.setData({ addressList: local });
                 return;
             }
-            this.setData({
-                loading: true
-            });
+            this.setData({ loading: true });
             try {
                 const result = await api.getAddressList();
-                this.setData({
-                    addressList: result || []
-                });
+                this.setData({ addressList: result || [] });
             } catch (error) {
-                console.log('CatchClause', error);
-                console.log('CatchClause', error);
                 console.error('加载地址列表失败', error);
-                uni.showToast({
-                    title: '加载失败',
-                    icon: 'none'
-                });
+                uni.showToast({ title: '加载失败', icon: 'none' });
             } finally {
-                this.setData({
-                    loading: false
-                });
+                this.setData({ loading: false });
             }
         },
 
@@ -132,20 +111,19 @@ export default {
         // 设置默认地址
         async setDefault(e) {
             const addressId = e.currentTarget.dataset.id;
+            if (!app.globalData.isLogin) {
+                let list = uni.getStorageSync('guestAddresses') || [];
+                list = list.map(a => ({ ...a, isDefault: a.id == addressId }));
+                uni.setStorageSync('guestAddresses', list);
+                this.setData({ addressList: list });
+                return;
+            }
             try {
                 await api.setDefaultAddress(addressId);
-                uni.showToast({
-                    title: '设置成功',
-                    icon: 'success'
-                });
+                uni.showToast({ title: '设置成功', icon: 'success' });
                 this.loadAddressList();
             } catch (error) {
-                console.log('CatchClause', error);
-                console.log('CatchClause', error);
-                uni.showToast({
-                    title: '设置失败',
-                    icon: 'none'
-                });
+                uni.showToast({ title: '设置失败', icon: 'none' });
             }
         },
 
@@ -164,22 +142,20 @@ export default {
                 title: '确认删除',
                 content: '确定要删除这个地址吗？',
                 success: async (res) => {
-                    if (res.confirm) {
-                        try {
-                            await api.deleteAddress(addressId);
-                            uni.showToast({
-                                title: '删除成功',
-                                icon: 'success'
-                            });
-                            this.loadAddressList();
-                        } catch (error) {
-                            console.log('CatchClause', error);
-                            console.log('CatchClause', error);
-                            uni.showToast({
-                                title: '删除失败',
-                                icon: 'none'
-                            });
-                        }
+                    if (!res.confirm) return;
+                    if (!app.globalData.isLogin) {
+                        let list = uni.getStorageSync('guestAddresses') || [];
+                        list = list.filter(a => a.id != addressId);
+                        uni.setStorageSync('guestAddresses', list);
+                        this.setData({ addressList: list });
+                        return;
+                    }
+                    try {
+                        await api.deleteAddress(addressId);
+                        uni.showToast({ title: '删除成功', icon: 'success' });
+                        this.loadAddressList();
+                    } catch (error) {
+                        uni.showToast({ title: '删除失败', icon: 'none' });
                     }
                 }
             });

@@ -171,30 +171,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* pages/address/address.wxss */
 .address-container {
     min-height: 100vh;

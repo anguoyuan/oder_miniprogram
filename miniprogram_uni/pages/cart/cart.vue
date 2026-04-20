@@ -16,7 +16,7 @@
                         <text class="item-specs">{{ item.specs.sugar }} {{ item.specs.temperature }} {{ item.specs.addOn }}</text>
 
                         <view class="item-bottom">
-                            <text class="item-price">¥{{ item.price }}</text>
+                            <text class="item-price">${{ item.price }}</text>
 
                             <view class="item-quantity">
                                 <view class="quantity-btn" @tap="changeQuantity" :data-cartid="item.cartId" data-type="minus">
@@ -45,7 +45,7 @@
                 <view class="footer-right">
                     <view class="total-info">
                         <text class="total-label">合计：</text>
-                        <text class="total-price">¥{{ totalPrice }}</text>
+                        <text class="total-price">${{ totalPrice }}</text>
                     </view>
                     <view class="checkout-btn" @tap="checkout">
                         <text>结算({{ selectedItems.length }})</text>
@@ -305,23 +305,6 @@ export default {
                 uni.showToast({
                     title: '请先选择商品',
                     icon: 'none'
-                });
-                return;
-            }
-
-            // 检查登录
-            if (!app.globalData.isLogin) {
-                uni.showModal({
-                    title: '提示',
-                    content: '请先登录',
-                    confirmText: '去登录',
-                    success: (res) => {
-                        if (res.confirm) {
-                            uni.switchTab({
-                                url: '/pages/index/index'
-                            });
-                        }
-                    }
                 });
                 return;
             }

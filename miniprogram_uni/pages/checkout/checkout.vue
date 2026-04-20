@@ -1,41 +1,40 @@
 <template>
     <!-- pages/checkout/checkout.wxml -->
     <view class="checkout-container">
-        <!-- 收货信息 -->
-        <view class="section address-section" v-if="deliveryType === 'delivery'">
-            <view class="section-header">
-                <text class="section-icon">📍</text>
-                <text class="section-title">收货地址</text>
-            </view>
-            <view class="address-content" @tap="selectAddress">
-                <text class="address-text">{{ address }}</text>
-                <text class="arrow">›</text>
-            </view>
+        <!-- 顶部标题 -->
+        <view class="page-header">
+            <text class="page-header-back" @tap="$navigateBack">‹</text>
+            <text class="page-header-title">Your Order</text>
         </view>
 
-        <!-- 配送方式 -->
+        <!-- 配送方式 + 地址合并 -->
         <view class="section delivery-section">
-            <view class="section-header">
-                <text class="section-icon">🚚</text>
-                <text class="section-title">配送方式</text>
+            <view class="delivery-toggle">
+                <view :class="'toggle-btn ' + (deliveryType === 'delivery' ? 'active' : '')" @tap="selectDeliveryType('delivery')">
+                    <text class="toggle-text">Delivery</text>
+                </view>
+                <view :class="'toggle-btn ' + (deliveryType === 'pickup' ? 'active' : '')" @tap="selectDeliveryType('pickup')">
+                    <text class="toggle-text">Pickup</text>
+                </view>
             </view>
-            <view class="delivery-types">
-                <view :class="'delivery-item ' + (deliveryType === 'delivery' ? 'active' : '')" @tap="selectDeliveryType" data-type="delivery">
-                    <text class="delivery-name">外卖配送</text>
-                    <text class="delivery-desc">预计30-45分钟送达</text>
-                </view>
-                <view :class="'delivery-item ' + (deliveryType === 'pickup' ? 'active' : '')" @tap="selectDeliveryType" data-type="pickup">
-                    <text class="delivery-name">到店自取</text>
-                    <text class="delivery-desc">预计15-20分钟可取</text>
-                </view>
+
+            <view v-if="deliveryType === 'delivery'" class="delivery-row" @tap="selectAddress">
+                <text class="delivery-row-label">Address</text>
+                <text class="delivery-row-value">{{ address }}</text>
+                <text class="arrow">›</text>
+            </view>
+
+            <view class="delivery-row" @tap="selectTime">
+                <text class="delivery-row-label">{{ deliveryType === 'delivery' ? 'Delivery Time' : 'Pickup Time' }}</text>
+                <text :class="'delivery-row-value ' + (deliveryTime ? '' : 'placeholder')">{{ deliveryTime || 'Select Time' }}</text>
+                <text class="arrow">›</text>
             </view>
         </view>
 
         <!-- 商品清单 -->
         <view class="section goods-section">
             <view class="section-header">
-                <text class="section-icon">🛍️</text>
-                <text class="section-title">商品清单</text>
+                <text class="section-title">Order Summary</text>
             </view>
             <view class="goods-list">
                 <view class="goods-item" v-for="(item, index) in selectedItems" :key="index">
@@ -43,13 +42,35 @@
 
                     <view class="goods-info">
                         <text class="goods-name">{{ item.name }}</text>
-                        <text class="goods-specs">{{ item.specs.sugar }} {{ item.specs.temperature }} {{ item.specs.addOn }}</text>
+                        <text v-if="item.description" class="goods-desc">{{ item.description }}</text>
                     </view>
 
                     <view class="goods-right">
-                        <text class="goods-price">¥{{ item.price }}</text>
+                        <text class="goods-price">${{ item.price }}</text>
                         <text class="goods-quantity">x{{ item.quantity }}</text>
                     </view>
+                </view>
+            </view>
+        </view>
+
+        <!-- 支付方式 -->
+        <view class="section payment-section">
+            <view class="section-header">
+                <text class="section-title">Payment Methods</text>
+            </view>
+            <view class="payment-item" @tap="selectPayment('wechat')">
+                <image src="/static/images/icon/wechat-pay.png" class="payment-icon" mode="aspectFit" />
+                <text class="payment-name">WeChat Pay</text>
+                <view :class="'payment-radio ' + (paymentMethod === 'wechat' ? 'selected' : '')">
+                    <text v-if="paymentMethod === 'wechat'" class="payment-check">✓</text>
+                </view>
+            </view>
+            <view class="payment-divider" />
+            <view class="payment-item" @tap="selectPayment('paynow')">
+                <image src="/static/images/icon/paynow.png" class="payment-icon" mode="aspectFit" />
+                <text class="payment-name">PayNow</text>
+                <view :class="'payment-radio ' + (paymentMethod === 'paynow' ? 'selected' : '')">
+                    <text v-if="paymentMethod === 'paynow'" class="payment-check">✓</text>
                 </view>
             </view>
         </view>
@@ -57,20 +78,45 @@
         <!-- 备注 -->
         <view class="section remark-section">
             <view class="section-header">
-                <text class="section-icon">📝</text>
-                <text class="section-title">订单备注</text>
+                <text class="section-title">Order Notes</text>
             </view>
-            <textarea class="remark-input" placeholder="请输入备注信息（选填）" :value="remark" @input="inputRemark" maxlength="200" />
+            <textarea class="remark-input" placeholder="Add notes (optional)" :value="remark" @input="inputRemark" maxlength="200" />
+        </view>
+
+        <!-- 时间选择弹窗 -->
+        <view v-if="showTimePicker" class="picker-overlay" @tap="cancelTime">
+            <view class="picker-sheet" @tap.stop>
+                <view class="picker-header">
+                    <text class="picker-title">Select a time slot</text>
+                    <text class="picker-cancel" @tap="cancelTime">Cancel</text>
+                </view>
+                <scroll-view scroll-x class="date-tabs" :scroll-into-view="'date-tab-' + selectedDateIndex">
+                    <view v-for="(tab, i) in dateTabs" :key="i"
+                          :id="'date-tab-' + i"
+                          :class="'date-tab ' + (selectedDateIndex === i ? 'active' : '')"
+                          @tap="selectDateTab(i)">
+                        <text class="date-tab-text">{{ tab.label }}</text>
+                    </view>
+                </scroll-view>
+                <view class="slots-list">
+                    <view v-for="(slot, i) in currentSlots" :key="i"
+                          :class="'slot-item ' + (!slot.available ? 'unavailable' : tempTime === slot.label ? 'selected' : '')"
+                          @tap="slot.available && selectSlot(slot.label)">
+                        <view :class="'slot-radio ' + (tempTime === slot.label ? 'active' : '')"></view>
+                        <text class="slot-label">{{ slot.label }}</text>
+                        <text v-if="!slot.available" class="slot-na">Not available</text>
+                    </view>
+                </view>
+                <view :class="'picker-confirm ' + (tempTime ? '' : 'disabled')" @tap="confirmTime">
+                    <text>Confirm</text>
+                </view>
+            </view>
         </view>
 
         <!-- 底部结算栏 -->
         <view class="checkout-footer">
-            <view class="total-info">
-                <text class="total-label">合计：</text>
-                <text class="total-price">¥{{ totalPrice }}</text>
-            </view>
             <view :class="'submit-btn ' + (submitting ? 'disabled' : '')" @tap="submitOrder">
-                <text>{{ submitting ? '提交中...' : '提交订单' }}</text>
+                <text>{{ submitting ? 'Processing...' : 'PAY $ ' + totalPrice }}</text>
             </view>
         </view>
     </view>
@@ -91,8 +137,45 @@ export default {
             address: '请选择收货地址',
             selectedAddress: null,
             pickupCode: '',
-            submitting: false
+            submitting: false,
+            paymentMethod: 'wechat',
+            deliveryTime: '',
+            showTimePicker: false,
+            selectedDateIndex: 0,
+            tempTime: ''
         };
+    },
+    computed: {
+        dateTabs() {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const now = new Date();
+            return Array.from({ length: 5 }, (_, i) => {
+                const d = new Date(now);
+                d.setDate(now.getDate() + i);
+                const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow'
+                    : `${d.getDate()} ${months[d.getMonth()]}, ${days[d.getDay()]}`;
+                return { label, date: d };
+            });
+        },
+        currentSlots() {
+            const now = new Date();
+            const isToday = this.selectedDateIndex === 0;
+            const h = now.getHours();
+            const slots = this.deliveryType === 'pickup'
+                ? [
+                    { label: '10am - 12pm', endHour: 12 },
+                    { label: '12pm - 2pm',  endHour: 14 },
+                    { label: '2pm - 4pm',   endHour: 16 },
+                    { label: '4pm - 6pm',   endHour: 18 },
+                    { label: '6pm - 8pm',   endHour: 20 },
+                ]
+                : [
+                    { label: '10am - 12pm', endHour: 12 },
+                    { label: '3pm - 7pm',   endHour: 19 },
+                ];
+            return slots.map(s => ({ ...s, available: !isToday || h < s.endHour }));
+        }
     },
     onLoad() {
         this.loadCheckoutData();
@@ -176,25 +259,27 @@ export default {
         },
 
         // 选择配送方式
-        selectDeliveryType(e) {
-            const type = e.currentTarget.dataset.type;
-            this.setData({
-                deliveryType: type
-            });
+        selectDeliveryType(type) {
+            this.setData({ deliveryType: type, deliveryTime: '' });
+        },
 
-            // 切换到外卖时，如果没有地址则提示
-            if (type === 'delivery' && (!this.selectedAddress || this.address === '请选择收货地址')) {
-                uni.showModal({
-                    title: '提示',
-                    content: '外卖配送需要添加收货地址',
-                    confirmText: '去添加',
-                    success: (res) => {
-                        if (res.confirm) {
-                            this.selectAddress();
-                        }
-                    }
-                });
-            }
+        // 打开时间选择器
+        selectTime() {
+            this.setData({ showTimePicker: true, selectedDateIndex: 0, tempTime: '' });
+        },
+        selectDateTab(i) {
+            this.setData({ selectedDateIndex: i, tempTime: '' });
+        },
+        selectSlot(label) {
+            this.setData({ tempTime: label });
+        },
+        confirmTime() {
+            if (!this.tempTime) return;
+            const dateLabel = this.dateTabs[this.selectedDateIndex].label;
+            this.setData({ deliveryTime: `${dateLabel}, ${this.tempTime}`, showTimePicker: false });
+        },
+        cancelTime() {
+            this.setData({ showTimePicker: false });
         },
 
         // 选择地址
@@ -213,23 +298,6 @@ export default {
 
         // 提交订单
         async submitOrder() {
-            // 验证登录状态
-            if (!app.globalData.isLogin) {
-                uni.showModal({
-                    title: '提示',
-                    content: '请先登录',
-                    confirmText: '去登录',
-                    success: (res) => {
-                        if (res.confirm) {
-                            uni.switchTab({
-                                url: '/pages/profile/profile'
-                            });
-                        }
-                    }
-                });
-                return;
-            }
-
             // 验证商品
             if (this.selectedItems.length === 0) {
                 uni.showToast({
@@ -284,6 +352,7 @@ export default {
             });
             try {
                 const orderData = {
+                    guestId: app.globalData.isLogin ? undefined : app.globalData.guestId,
                     orderType: this.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
                     address: this.deliveryType === 'delivery' ? this.address : '到店自取',
                     addressId: this.deliveryType === 'delivery' && this.selectedAddress ? this.selectedAddress.id : null,
@@ -347,6 +416,16 @@ export default {
             return Math.floor(100000 + Math.random() * 900000).toString();
         },
 
+        // 选择支付方式
+        selectPayment(method) {
+            this.setData({ paymentMethod: method });
+        },
+
+        // 返回上一页
+        $navigateBack() {
+            uni.navigateBack();
+        },
+
         // 跳转到订单列表
         navigateToOrderList() {
             uni.switchTab({
@@ -361,108 +440,148 @@ export default {
 .checkout-container {
     min-height: 100vh;
     background-color: #f8f8f8;
+    padding-top: 0;
     padding-bottom: 120rpx;
+}
+
+.page-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 90rpx;
+    background-color: #fff;
+    padding-top: calc(var(--status-bar-height) + 16rpx);
+}
+
+.page-header-back {
+    position: absolute;
+    left: 30rpx;
+    font-size: 56rpx;
+    color: #333;
+    line-height: 1;
+}
+
+.page-header-title {
+    font-size: 34rpx;
+    font-weight: bold;
+    color: #333;
 }
 
 .section {
     background-color: #fff;
-    margin-bottom: 20rpx;
-    padding: 30rpx;
+    margin-bottom: 16rpx;
+    padding: 32rpx 30rpx 30rpx;
 }
 
 .section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20rpx;
-}
-
-.section-icon {
-    font-size: 36rpx;
-    margin-right: 10rpx;
+    padding-bottom: 16rpx;
+    margin-bottom: 12rpx;
+    border-bottom: 1rpx solid #ede8e3;
 }
 
 .section-title {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: #333;
-}
-
-/* 地址部分 */
-.address-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20rpx;
-    background-color: #f8f8f8;
-    border-radius: 12rpx;
-}
-
-.address-text {
-    flex: 1;
     font-size: 28rpx;
-    color: #666;
+    font-weight: bold;
+    color: #2c1a0e;
+    letter-spacing: 1rpx;
+    text-transform: uppercase;
+}
+
+/* 配送方式切换 */
+.delivery-toggle {
+    display: flex;
+    background-color: #f0ebe6;
+    border-radius: 12rpx;
+    padding: 6rpx;
+    margin-bottom: 24rpx;
+}
+
+.toggle-btn {
+    flex: 1;
+    height: 64rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10rpx;
+}
+
+.toggle-btn.active {
+    background-color: #fff;
+    box-shadow: 0 2rpx 8rpx rgba(44, 26, 14, 0.12);
+}
+
+.toggle-text {
+    font-size: 28rpx;
+    font-weight: bold;
+    color: #a08060;
+}
+
+.toggle-btn.active .toggle-text {
+    color: #2c1a0e;
+}
+
+.delivery-row {
+    display: flex;
+    align-items: center;
+    padding: 20rpx 0;
+    border-bottom: 1rpx solid #f0ebe6;
+}
+
+.delivery-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.delivery-row-label {
+    font-size: 28rpx;
+    color: #2c1a0e;
+    font-weight: 500;
+    width: 200rpx;
+    flex-shrink: 0;
+}
+
+.delivery-row-value {
+    flex: 1;
+    font-size: 26rpx;
+    color: #2c1a0e;
+    text-align: right;
+    margin-right: 8rpx;
+}
+
+.delivery-row-value.placeholder {
+    color: #a08060;
 }
 
 .arrow {
-    font-size: 48rpx;
+    font-size: 40rpx;
     color: #ccc;
-}
-
-/* 配送方式 */
-.delivery-types {
-    display: flex;
-    gap: 20rpx;
-}
-
-.delivery-item {
-    flex: 1;
-    padding: 30rpx 20rpx;
-    background-color: #f8f8f8;
-    border-radius: 12rpx;
-    border: 2rpx solid transparent;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: all 0.3s;
-}
-
-.delivery-item.active {
-    background-color: #e8f5e0;
-    border-color: #aad08f;
-}
-
-.delivery-name {
-    font-size: 30rpx;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10rpx;
-}
-
-.delivery-desc {
-    font-size: 24rpx;
-    color: #999;
 }
 
 /* 商品清单 */
 .goods-list {
     display: flex;
     flex-direction: column;
-    gap: 20rpx;
 }
 
 .goods-item {
     display: flex;
     align-items: center;
-    padding: 20rpx;
-    background-color: #f8f8f8;
-    border-radius: 12rpx;
+    padding: 24rpx 0;
+    border-bottom: 1rpx solid #f0ebe6;
+}
+
+.goods-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .goods-image {
-    width: 120rpx;
-    height: 120rpx;
-    border-radius: 12rpx;
-    margin-right: 20rpx;
+    width: 110rpx;
+    height: 110rpx;
+    border-radius: 16rpx;
+    margin-right: 24rpx;
+    flex-shrink: 0;
 }
 
 .goods-info {
@@ -473,31 +592,218 @@ export default {
 
 .goods-name {
     font-size: 28rpx;
-    color: #333;
-    margin-bottom: 10rpx;
+    font-weight: 500;
+    color: #2c1a0e;
+    margin-bottom: 6rpx;
 }
 
-.goods-specs {
-    font-size: 24rpx;
-    color: #999;
+.goods-desc {
+    font-size: 22rpx;
+    color: #c8972a;
 }
 
 .goods-right {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    gap: 8rpx;
 }
 
 .goods-price {
     font-size: 30rpx;
-    color: #ff6b6b;
+    color: #2c1a0e;
     font-weight: bold;
-    margin-bottom: 5rpx;
 }
 
 .goods-quantity {
     font-size: 24rpx;
-    color: #999;
+    color: #a08060;
+}
+
+/* 时间选择弹窗 */
+.picker-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.45);
+    z-index: 999;
+    display: flex;
+    align-items: flex-end;
+}
+
+.picker-sheet {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
+    border-radius: 32rpx 32rpx 0 0;
+    padding: 36rpx 24rpx 60rpx;
+}
+
+.picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32rpx;
+}
+
+.picker-title {
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+}
+
+.picker-cancel {
+    font-size: 28rpx;
+    color: #a08060;
+}
+
+.date-tabs {
+    white-space: nowrap;
+    margin-bottom: 28rpx;
+}
+
+.date-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14rpx 28rpx;
+    border-radius: 10rpx;
+    border: 2rpx solid #ede8e3;
+    margin-right: 16rpx;
+    background-color: #fff;
+}
+
+.date-tab.active {
+    background-color: #2c1a0e;
+    border-color: #2c1a0e;
+}
+
+.date-tab-text {
+    font-size: 26rpx;
+    color: #2c1a0e;
+    font-weight: 500;
+}
+
+.date-tab.active .date-tab-text {
+    color: #fff;
+}
+
+.slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+    margin-bottom: 36rpx;
+}
+
+.slot-item {
+    display: flex;
+    align-items: center;
+    padding: 24rpx 20rpx;
+    border-radius: 16rpx;
+    border: 2rpx solid #ede8e3;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+
+.slot-item.unavailable {
+    background-color: #f5f5f5;
+    border-color: #f0f0f0;
+}
+
+.slot-item.selected {
+    border-color: #2c1a0e;
+}
+
+.slot-radio {
+    width: 36rpx;
+    height: 36rpx;
+    border-radius: 50%;
+    border: 3rpx solid #c0b0a0;
+    margin-right: 20rpx;
+    flex-shrink: 0;
+}
+
+.slot-radio.active {
+    border-color: #2c1a0e;
+    background-color: #2c1a0e;
+    box-shadow: inset 0 0 0 6rpx #fff;
+}
+
+.slot-label {
+    flex: 1;
+    font-size: 30rpx;
+    color: #2c1a0e;
+}
+
+.slot-item.unavailable .slot-label {
+    color: #bbb;
+}
+
+.slot-na {
+    font-size: 24rpx;
+    color: #bbb;
+}
+
+.picker-confirm {
+    background-color: #2c1a0e;
+    height: 96rpx;
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+.picker-confirm.disabled {
+    background-color: #ccc;
+}
+
+/* 支付方式 */
+.payment-item {
+    display: flex;
+    align-items: center;
+    padding: 16rpx 0;
+}
+
+.payment-icon {
+    width: 48rpx;
+    height: 30rpx;
+    margin-right: 16rpx;
+    flex-shrink: 0;
+}
+
+.payment-name {
+    flex: 1;
+    font-size: 27rpx;
+    color: #2c1a0e;
+}
+
+.payment-radio {
+    width: 36rpx;
+    height: 36rpx;
+    border-radius: 50%;
+    border: 2rpx solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.payment-radio.selected {
+    background-color: #2c1a0e;
+    border-color: #2c1a0e;
+}
+
+.payment-check {
+    color: #fff;
+    font-size: 20rpx;
+    font-weight: bold;
+}
+
+.payment-divider {
+    height: 1rpx;
+    background-color: #ede8e3;
 }
 
 /* 备注 */
@@ -516,39 +822,22 @@ export default {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 100rpx;
     background-color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 30rpx;
+    padding: 20rpx 30rpx 40rpx;
     box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.08);
 }
 
-.total-info {
-    display: flex;
-    align-items: baseline;
-}
-
-.total-label {
-    font-size: 28rpx;
-    color: #666;
-}
-
-.total-price {
-    font-size: 40rpx;
-    color: #ff6b6b;
-    font-weight: bold;
-}
-
 .submit-btn {
-    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
+    background-color: #2c1a0e;
     color: #fff;
-    padding: 24rpx 60rpx;
-    border-radius: 50rpx;
-    font-size: 32rpx;
+    height: 96rpx;
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34rpx;
     font-weight: bold;
-    box-shadow: 0 8rpx 16rpx rgba(170, 208, 143, 0.3);
+    letter-spacing: 2rpx;
 }
 
 .submit-btn.disabled {
