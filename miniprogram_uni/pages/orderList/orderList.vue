@@ -31,8 +31,8 @@
                     <view class="order-item card fade-in" v-for="(item, index) in orders" :key="index">
                         <view class="order-header">
                             <text class="order-id">订单号：{{ item.orderNo }}</text>
-                            <view :class="'order-status status-' + item.status">
-                                <text>{{ item.statusText }}</text>
+                            <view :class="'order-status payment-' + (item.paymentStatus === 'paid' ? 'paid' : 'unpaid')">
+                                <text>{{ item.paymentStatus === 'paid' ? '已确认付款' : '待确认付款' }}</text>
                             </view>
                         </view>
 
@@ -408,6 +408,17 @@ export default {
     color: #5D3A1A;
     font-weight: bold;
     border-bottom: 4rpx solid #5D3A1A;
+}
+
+/* 付款状态样式 */
+.payment-unpaid {
+    color: #ff9800;
+    background-color: #fff3e0;
+}
+
+.payment-paid {
+    color: #2e7d32;
+    background-color: #e8f5e9;
 }
 
 /* 订单状态样式 */

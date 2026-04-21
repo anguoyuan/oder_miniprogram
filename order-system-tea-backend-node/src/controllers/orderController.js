@@ -8,9 +8,14 @@ class OrderController {
    */
   static async createOrder(req, res) {
     try {
-      const userId = req.userId;
-      const { items, orderType, remark, address, phone, totalPrice } = req.body;
-      
+      let userId = req.userId;
+      const { items, orderType, remark, address, phone, totalPrice, guestId } = req.body;
+
+      // 兜底：若 token 和 body guestId 都没给，生成一个匿名ID，避免 user_id 为 null
+      if (!userId) {
+        userId = guestId || (900000000 + Math.floor(Math.random() * 100000000));
+      }
+
       if (!items || items.length === 0) {
         return res.json(error('订单商品不能为空'));
       }

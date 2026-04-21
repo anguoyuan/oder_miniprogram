@@ -403,6 +403,15 @@
     font-weight: bold;
     border-bottom: 4rpx solid #5D3A1A;
 }
+/* 付款状态样式 */
+.payment-unpaid {
+    color: #ff9800;
+    background-color: #fff3e0;
+}
+.payment-paid {
+    color: #2e7d32;
+    background-color: #e8f5e9;
+}
 /* 订单状态样式 */
 .status-pending {
     color: #ff9800;

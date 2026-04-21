@@ -21,7 +21,22 @@ class OrderModel {
     const hasAddressId = order.addressId !== undefined && order.addressId !== null;
     
     if (hasAddressId) {
-      sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, remark, address, phone, address_id) 
+      sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, payment_status, remark, address, phone, address_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      params = [
+        orderNo,
+        order.userId,
+        order.totalPrice,
+        order.orderType || 'takeaway',
+        'pending',
+        'unpaid',
+        order.remark || null,
+        order.address || null,
+        order.phone || null,
+        order.addressId
+      ];
+    } else {
+      sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, payment_status, remark, address, phone)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       params = [
         orderNo,
@@ -29,20 +44,7 @@ class OrderModel {
         order.totalPrice,
         order.orderType || 'takeaway',
         'pending',
-        order.remark || null,
-        order.address || null,
-        order.phone || null,
-        order.addressId
-      ];
-    } else {
-      sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, remark, address, phone) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-      params = [
-        orderNo,
-        order.userId,
-        order.totalPrice,
-        order.orderType || 'takeaway',
-        'pending',
+        'unpaid',
         order.remark || null,
         order.address || null,
         order.phone || null

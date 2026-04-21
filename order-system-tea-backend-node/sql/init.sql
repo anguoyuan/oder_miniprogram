@@ -247,6 +247,7 @@ CREATE TABLE `orders` (
   `total_price` decimal(10,2) NOT NULL COMMENT '订单总价',
   `order_type` varchar(20) NOT NULL COMMENT '订单类型：takeaway外卖，pickup自取',
   `status` varchar(20) DEFAULT 'pending' COMMENT '订单状态：pending待处理，preparing制作中，ready待取餐，completed已完成，cancelled已取消',
+  `payment_status` varchar(20) DEFAULT 'unpaid' COMMENT '付款状态：unpaid待付款，paid已付款',
   `remark` varchar(500) DEFAULT NULL COMMENT '备注',
   `address` varchar(500) DEFAULT NULL COMMENT '配送地址',
   `phone` varchar(20) DEFAULT NULL COMMENT '联系电话',

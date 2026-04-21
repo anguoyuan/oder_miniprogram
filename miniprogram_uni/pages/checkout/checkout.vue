@@ -192,6 +192,47 @@
             </view>
         </view>
 
+        <!-- PayNow 付款弹窗 -->
+        <view v-if="showPaynowPopup" class="picker-overlay" @tap="closePaynowPopup">
+            <view class="paynow-popup" @tap.stop>
+                <view class="paynow-header">
+                    <text class="paynow-title">PayNow Payment</text>
+                    <text class="paynow-close" @tap="closePaynowPopup">✕</text>
+                </view>
+
+                <view class="paynow-body">
+                    <!-- 金额 -->
+                    <view class="paynow-amount-box">
+                        <text class="paynow-amount-label">Amount to pay</text>
+                        <text class="paynow-amount">$ {{ totalPrice }}</text>
+                    </view>
+
+                    <!-- 二维码 -->
+                    <view class="paynow-qr-box">
+                        <image src="/static/images/icon/paynow-qr.png" class="paynow-qr-image" mode="aspectFit" />
+                    </view>
+
+                    <!-- PayNow 账号 -->
+                    <view class="paynow-account-box">
+                        <text class="paynow-account-label">Or transfer to PayNow UEN</text>
+                        <text class="paynow-account-number" selectable>202401234A</text>
+                    </view>
+
+                    <!-- 提示 -->
+                    <view class="paynow-tips">
+                        <text class="paynow-tip">Scan the QR code above or transfer via PayNow UEN.</text>
+                        <text class="paynow-tip">Please transfer the exact amount shown.</text>
+                        <text class="paynow-tip-highlight">Payment confirmation takes about 1 minute.</text>
+                    </view>
+                </view>
+
+                <!-- 确认按钮 -->
+                <view :class="'paynow-confirm-btn ' + (submitting ? 'disabled' : '')" @tap="confirmPaynowOrder">
+                    <text>{{ submitting ? 'Processing...' : 'I have paid' }}</text>
+                </view>
+            </view>
+        </view>
+
         <!-- 底部结算栏 -->
         <view class="checkout-footer">
             <view :class="'submit-btn ' + (submitting ? 'disabled' : '')" @tap="submitOrder">
@@ -226,7 +267,8 @@ export default {
             showAddressForm: false,
             addressList: [],
             mrtStation: '',
-            newAddr: { postalCode: '', building: '', address: '', floor: '', unit: '', name: '', phone: '' }
+            newAddr: { postalCode: '', building: '', address: '', floor: '', unit: '', name: '', phone: '' },
+            showPaynowPopup: false
         };
     },
     computed: {
@@ -490,12 +532,34 @@ export default {
                     }
                 }
             }
+            // PayNow: 弹出付款弹窗，不直接提交
+            if (this.paymentMethod === 'paynow') {
+                this.setData({ showPaynowPopup: true });
+                return;
+            }
+
+            this.doSubmitOrder();
+        },
+
+        // 关闭 PayNow 弹窗
+        closePaynowPopup() {
+            this.setData({ showPaynowPopup: false });
+        },
+
+        // PayNow 弹窗点击"I have paid"
+        confirmPaynowOrder() {
+            this.setData({ showPaynowPopup: false });
+            this.doSubmitOrder();
+        },
+
+        // 实际提交订单逻辑
+        async doSubmitOrder() {
             this.setData({
                 submitting: true
             });
             try {
                 const orderData = {
-                    guestId: app.globalData.isLogin ? undefined : app.globalData.guestId,
+                    guestId: app.globalData.guestId,
                     orderType: this.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
                     address: this.deliveryType === 'delivery' ? this.address : '到店自取',
                     addressId: this.deliveryType === 'delivery' && this.selectedAddress ? this.selectedAddress.id : null,
@@ -528,7 +592,7 @@ export default {
                 } else {
                     // 外卖订单直接跳转
                     uni.showToast({
-                        title: '下单成功',
+                        title: '订单已创建，待确认付款',
                         icon: 'success',
                         duration: 2000
                     });
@@ -1168,6 +1232,132 @@ export default {
 }
 
 .submit-btn.disabled {
+    opacity: 0.5;
+}
+
+/* PayNow 付款弹窗 */
+.paynow-popup {
+    width: 90%;
+    max-width: 650rpx;
+    background-color: #fff;
+    border-radius: 24rpx;
+    margin: auto;
+    overflow: hidden;
+}
+
+.paynow-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 30rpx 30rpx 20rpx;
+    border-bottom: 1rpx solid #f0ebe6;
+}
+
+.paynow-title {
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+}
+
+.paynow-close {
+    font-size: 36rpx;
+    color: #999;
+    padding: 8rpx;
+    line-height: 1;
+}
+
+.paynow-body {
+    padding: 30rpx;
+}
+
+.paynow-amount-box {
+    text-align: center;
+    margin-bottom: 30rpx;
+}
+
+.paynow-amount-label {
+    display: block;
+    font-size: 24rpx;
+    color: #a08060;
+    margin-bottom: 8rpx;
+}
+
+.paynow-amount {
+    font-size: 52rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+}
+
+.paynow-qr-box {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30rpx;
+}
+
+.paynow-qr-image {
+    width: 360rpx;
+    height: 360rpx;
+    border-radius: 16rpx;
+    border: 2rpx solid #f0ebe6;
+}
+
+.paynow-account-box {
+    text-align: center;
+    margin-bottom: 30rpx;
+    padding: 24rpx;
+    background-color: #faf7f4;
+    border-radius: 12rpx;
+}
+
+.paynow-account-label {
+    display: block;
+    font-size: 24rpx;
+    color: #a08060;
+    margin-bottom: 10rpx;
+}
+
+.paynow-account-number {
+    font-size: 36rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+    letter-spacing: 2rpx;
+}
+
+.paynow-tips {
+    margin-bottom: 10rpx;
+}
+
+.paynow-tip {
+    display: block;
+    font-size: 22rpx;
+    color: #a08060;
+    line-height: 1.8;
+    text-align: center;
+}
+
+.paynow-tip-highlight {
+    display: block;
+    font-size: 24rpx;
+    color: #e67e22;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 8rpx;
+}
+
+.paynow-confirm-btn {
+    margin: 0 30rpx 30rpx;
+    background-color: #2c1a0e;
+    height: 88rpx;
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30rpx;
+    font-weight: bold;
+    color: #fff;
+}
+
+.paynow-confirm-btn.disabled {
     opacity: 0.5;
 }
 </style>

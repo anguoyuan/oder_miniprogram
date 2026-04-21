@@ -411,7 +411,8 @@ var _default = {
         unit: '',
         name: '',
         phone: ''
-      }
+      },
+      showPaynowPopup: false
     };
   },
   computed: {
@@ -881,18 +882,52 @@ var _default = {
                 });
                 return _context5.abrupt("return");
               case 24:
-                _this5.setData({
+                if (!(_this5.paymentMethod === 'paynow')) {
+                  _context5.next = 27;
+                  break;
+                }
+                _this5.setData({ showPaynowPopup: true });
+                return _context5.abrupt("return");
+              case 27:
+                _this5.doSubmitOrder();
+              case 28:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5, null, [[8, 17]]);
+      }))();
+    },
+    // 关闭 PayNow 弹窗
+    closePaynowPopup: function closePaynowPopup() {
+      this.setData({ showPaynowPopup: false });
+    },
+    // PayNow 弹窗确认
+    confirmPaynowOrder: function confirmPaynowOrder() {
+      this.setData({ showPaynowPopup: false });
+      this.doSubmitOrder();
+    },
+    // 实际提交订单
+    doSubmitOrder: function doSubmitOrder() {
+      var _this6 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee6() {
+        var orderData, _result, pickupCode;
+        return _regenerator.default.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                _this6.setData({
                   submitting: true
                 });
-                _context5.prev = 25;
+                _context6.prev = 1;
                 orderData = {
-                  guestId: app.globalData.isLogin ? undefined : app.globalData.guestId,
-                  orderType: _this5.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
-                  address: _this5.deliveryType === 'delivery' ? _this5.address : '到店自取',
-                  addressId: _this5.deliveryType === 'delivery' && _this5.selectedAddress ? _this5.selectedAddress.id : null,
-                  phone: _this5.deliveryType === 'delivery' && _this5.selectedAddress ? _this5.selectedAddress.phone : '',
-                  remark: _this5.remark,
-                  items: _this5.selectedItems.map(function (item) {
+                  guestId: app.globalData.guestId,
+                  orderType: _this6.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
+                  address: _this6.deliveryType === 'delivery' ? _this6.address : '到店自取',
+                  addressId: _this6.deliveryType === 'delivery' && _this6.selectedAddress ? _this6.selectedAddress.id : null,
+                  phone: _this6.deliveryType === 'delivery' && _this6.selectedAddress ? _this6.selectedAddress.phone : '',
+                  remark: _this6.remark,
+                  items: _this6.selectedItems.map(function (item) {
                     return {
                       productId: item.id,
                       quantity: item.quantity,
@@ -900,64 +935,58 @@ var _default = {
                     };
                   })
                 };
-                _context5.next = 29;
+                _context6.next = 5;
                 return api.createOrder(orderData);
-              case 29:
-                _result = _context5.sent;
-                // 如果是自取订单，生成取餐码
-                if (_this5.deliveryType === 'pickup') {
-                  pickupCode = _this5.generatePickupCode();
-                  _this5.setData({
+              case 5:
+                _result = _context6.sent;
+                if (_this6.deliveryType === 'pickup') {
+                  pickupCode = _this6.generatePickupCode();
+                  _this6.setData({
                     pickupCode: pickupCode
                   });
-
-                  // 显示取餐码弹窗
                   uni.showModal({
                     title: '下单成功',
                     content: "\u60A8\u7684\u53D6\u9910\u7801\u662F\uFF1A".concat(pickupCode, "\n\u8BF7\u51ED\u6B64\u7801\u5230\u5E97\u53D6\u9910"),
                     showCancel: false,
                     success: function success() {
-                      _this5.navigateToOrderList();
+                      _this6.navigateToOrderList();
                     }
                   });
                 } else {
-                  // 外卖订单直接跳转
                   uni.showToast({
-                    title: '下单成功',
+                    title: '订单已创建，待确认付款',
                     icon: 'success',
                     duration: 2000
                   });
                   setTimeout(function () {
-                    _this5.navigateToOrderList();
+                    _this6.navigateToOrderList();
                   }, 2000);
                 }
-
-                // 清空购物车
                 app.globalData.clearCart();
-                _context5.next = 40;
+                _context6.next = 16;
                 break;
-              case 34:
-                _context5.prev = 34;
-                _context5.t1 = _context5["catch"](25);
-                console.log('CatchClause', _context5.t1);
-                console.log('CatchClause', _context5.t1);
-                console.error('提交订单失败', _context5.t1);
+              case 10:
+                _context6.prev = 10;
+                _context6.t0 = _context6["catch"](1);
+                console.log('CatchClause', _context6.t0);
+                console.log('CatchClause', _context6.t0);
+                console.error('提交订单失败', _context6.t0);
                 uni.showToast({
                   title: '下单失败',
                   icon: 'none'
                 });
-              case 40:
-                _context5.prev = 40;
-                _this5.setData({
+              case 16:
+                _context6.prev = 16;
+                _this6.setData({
                   submitting: false
                 });
-                return _context5.finish(40);
-              case 43:
+                return _context6.finish(16);
+              case 19:
               case "end":
-                return _context5.stop();
+                return _context6.stop();
             }
           }
-        }, _callee5, null, [[8, 17], [25, 34, 40, 43]]);
+        }, _callee6, null, [[1, 10, 16, 19]]);
       }))();
     },
     // 生成取餐码（6位数字）
