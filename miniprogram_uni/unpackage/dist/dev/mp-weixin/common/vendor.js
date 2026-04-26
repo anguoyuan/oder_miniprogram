@@ -12241,7 +12241,7 @@ module.exports = _asyncToGenerator, module.exports.__esModule = true, module.exp
 // 配置文件
 var config = {
   // API基础地址 - 开发环境
-  apiUrl: 'http://localhost:8080/api',
+  apiUrl: 'https://api.liveasy.solutions/api',
   // API基础地址 - 生产环境（部署时修改）
   // apiUrl: 'https://your-domain.com/api',
 
