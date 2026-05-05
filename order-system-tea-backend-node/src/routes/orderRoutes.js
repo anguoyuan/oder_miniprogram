@@ -12,6 +12,7 @@ router.put('/cancel/:orderId', auth, OrderController.cancelOrder);
 // 管理端接口
 router.get('/all', adminAuth, OrderController.getAllOrders);
 router.put('/update-status', adminAuth, OrderController.updateOrderStatus);
+router.put('/update-payment-status', adminAuth, OrderController.updatePaymentStatus);
 router.get('/stats', adminAuth, OrderController.getStats);
 
 module.exports = router;

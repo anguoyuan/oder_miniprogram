@@ -65,7 +65,7 @@
         </view>
 
         <!-- 底部购物车 -->
-        <view class="cart-bottom" v-if="cartCount > 0">
+        <view class="cart-bottom" v-show="cartCount > 0">
             <view class="cart-info" @tap="showCart">
                 <view class="cart-icon-wrapper">
                     <image src="/static/images/icon/gouwuche.png" class="cart-icon" />
@@ -171,7 +171,7 @@
 
                         <view class="cart-item-info">
                             <text class="cart-item-name">{{ item.name }}</text>
-                            <text class="cart-item-specs">{{ item.specs.sugar }} {{ item.specs.temperature }} {{ item.specs.addOn }}</text>
+                            <text class="cart-item-specs">{{ item.description }}</text>
                             <view class="cart-item-bottom">
                                 <text class="cart-item-price">${{ item.price }}</text>
                                 <view class="cart-quantity-control">
@@ -534,10 +534,12 @@ export default {
                 return;
             }
 
-            // 跳转到结算页面
+            // this.showCartModal = false;
             uni.navigateTo({
-                url: '/pages/checkout/checkout'
-            });
+                    url: '/pages/checkout/checkout',
+                    animationType: 'pop-in', // 显式指定原生推入动画
+                    animationDuration: 250
+                });
         },
 
         // 切换点赞
@@ -921,6 +923,11 @@ export default {
     align-items: center;
     z-index: 100;
     box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.1);
+	
+	/* --- 新增以下三行 --- */
+	will-change: transform; 
+	transform: translateZ(0); 
+	-webkit-transform: translateZ(0);
 }
 
 .cart-info {
@@ -1207,13 +1214,12 @@ export default {
 
 .cart-list {
     flex: 1;
-    padding: 0 40rpx;
     max-height: 500rpx;
 }
 
 .cart-item {
     display: flex;
-    padding: 30rpx 0;
+    padding: 30rpx 40rpx;
     border-bottom: 1rpx solid #f0f0f0;
 }
 
@@ -1226,6 +1232,7 @@ export default {
 
 .cart-item-info {
     flex: 1;
+    min-width: 0;
 }
 
 .cart-item-name {
@@ -1234,6 +1241,9 @@ export default {
     color: #333;
     margin-bottom: 8rpx;
     display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cart-item-specs {

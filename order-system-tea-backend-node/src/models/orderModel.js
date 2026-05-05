@@ -155,41 +155,51 @@ class OrderModel {
   /**
    * 获取所有订单列表（管理端）
    */
-  static async getAllOrders(status, page, pageSize) {
-    // 使用分页工具确保参数是整数类型（MySQL兼容性）
+  static async getAllOrders(status, paymentStatus, page, pageSize) {
     const { limit, offset } = normalizePagination(page, pageSize);
-    
-    // 直接拼接SQL（参数已经过类型转换，安全）
+
+    let where = [];
     let sql = 'SELECT o.*, u.nickname as userNickname, u.avatar as userAvatar FROM orders o LEFT JOIN user u ON o.user_id = u.id';
-    let countSql = 'SELECT COUNT(*) as total FROM orders';
-    
-    if (status) {
-      const safeStatus = pool.escape(status);
-      sql += ` WHERE o.status = ${safeStatus}`;
-      countSql += ` WHERE status = ${safeStatus}`;
+    let countSql = 'SELECT COUNT(*) as total FROM orders o';
+
+    if (status === 'active') {
+      where.push(`o.status IN ('pending','preparing','ready')`);
+    } else if (status) {
+      where.push(`o.status = ${pool.escape(status)}`);
     }
-    
+    if (paymentStatus) {
+      where.push(`o.payment_status = ${pool.escape(paymentStatus)}`);
+    }
+    if (where.length) {
+      sql += ` WHERE ${where.join(' AND ')}`;
+      countSql += ` WHERE ${where.map(w => w.replace(/^o\./g, '')).join(' AND ')}`;
+    }
+
     sql += ` ORDER BY o.create_time DESC LIMIT ${limit} OFFSET ${offset}`;
-    
+
     const [rows] = await pool.query(sql);
     const [countRows] = await pool.query(countSql);
-    
-    // 为每个订单查询订单明细
+
     const orders = await Promise.all(rows.map(async (order) => {
       const [items] = await pool.execute(
-        'SELECT * FROM order_item WHERE order_id = ?',
+        `SELECT oi.*, p.description as productDescription
+         FROM order_item oi
+         LEFT JOIN product p ON oi.product_id = p.id
+         WHERE oi.order_id = ?`,
         [order.id]
       );
-      return {
-        ...order,
-        items: items
-      };
+      return { ...order, items };
     }));
-    
-    return {
-      records: orders,
-      total: countRows[0].total
-    };
+
+    return { records: orders, total: countRows[0].total };
+  }
+
+  static async updatePaymentStatus(orderId, paymentStatus) {
+    const [result] = await pool.execute(
+      'UPDATE orders SET payment_status = ? WHERE id = ?',
+      [paymentStatus, orderId]
+    );
+    return result.affectedRows > 0;
   }
   
   /**

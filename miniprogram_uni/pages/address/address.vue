@@ -1,58 +1,48 @@
 <template>
-    <!-- pages/address/address.wxml -->
     <view class="address-container">
-        <view v-if="addressList.length > 0" class="address-list">
-            <view class="address-item" @tap="selectAddress" :data-address="item" v-for="(item, index) in addressList" :key="index">
-                <view class="address-header">
-                    <view class="user-info">
-                        <text class="user-name">{{ item.name }}</text>
-                        <text class="user-phone">{{ item.phone }}</text>
-                    </view>
-                    <view v-if="item.isDefault" class="default-tag">默认</view>
-                </view>
+        <!-- 自定义导航栏 -->
+        <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px', height: (statusBarHeight + 44) + 'px' }">
+            <text class="nav-back" @tap="goBack">‹</text>
+            <text class="nav-title">My Addresses</text>
+            <view style="width: 60rpx;"></view>
+        </view>
 
-                <view class="address-detail">
-                    <text class="address-icon">📍</text>
-                    <text class="address-text">{{ item.province }}{{ item.city }}{{ item.district }}{{ item.detail }}</text>
+        <!-- 地址列表 -->
+        <scroll-view scroll-y class="addr-scroll">
+            <view v-if="loading" class="addr-empty">
+                <text class="addr-empty-text">Loading...</text>
+            </view>
+            <view v-else-if="addressList.length === 0" class="addr-empty">
+                <text class="addr-empty-text">No addresses yet</text>
+            </view>
+            <view v-for="(item, i) in addressList" :key="i" class="addr-item" @tap="setDefault(item.id)">
+                <!-- 左侧内容 -->
+                <view class="addr-main">
+                    <text class="addr-region">{{ item.province }}{{ item.city }}{{ item.district }}</text>
+                    <text class="addr-street">{{ item.detail }}</text>
+                    <view class="addr-bottom">
+                        <text class="addr-person">{{ item.name }}  {{ item.phone }}</text>
+                    </view>
+                    <text class="addr-edit-link" @tap.stop="editAddress(item)">Edit</text>
                 </view>
-
-                <view class="address-actions">
-                    <view class="action-btn" @tap.stop.prevent="editAddress" :data-address="item">
-                        <text class="action-icon">✏️</text>
-                        <text>编辑</text>
-                    </view>
-                    <view class="action-btn" @tap.stop.prevent="deleteAddress" :data-id="item.id">
-                        <text class="action-icon">🗑️</text>
-                        <text>删除</text>
-                    </view>
-                    <view v-if="!item.isDefault" class="action-btn" @tap.stop.prevent="setDefault" :data-id="item.id">
-                        <text class="action-icon">⭐</text>
-                        <text>设为默认</text>
+                <!-- 右侧单选圈 -->
+                <view class="addr-radio" @tap.stop="setDefault(item.id)">
+                    <view :class="['addr-radio-outer', item.isDefault ? 'addr-radio-selected' : '']">
+                        <view v-if="item.isDefault" class="addr-radio-inner"></view>
                     </view>
                 </view>
             </view>
-        </view>
 
-        <!-- 空状态 -->
-        <view v-else class="empty-address">
-            <image src="/static/images/me/shouhuodizhi.png" class="empty-image" />
-            <text class="empty-text">还没有收货地址</text>
-        </view>
+            <view class="add-btn" @tap="addAddress">
+                <text class="add-btn-text">+ Add New Address</text>
+            </view>
 
-        <!-- 添加地址按钮 -->
-        <view class="add-address-btn" @tap="addAddress">
-            <text>+ 添加新地址</text>
-        </view>
-
-        <!-- 加载中 -->
-        <view v-if="loading" class="loading">
-            <text>加载中...</text>
-        </view>
+            <view style="height: 40rpx;"></view>
+        </scroll-view>
     </view>
 </template>
 
 <script>
-// pages/address/address.js
 const app = getApp();
 const api = require('../../utils/api.js');
 export default {
@@ -60,260 +50,225 @@ export default {
         return {
             addressList: [],
             loading: false,
-            selectedAddress: '',
-            address: ''
+            statusBarHeight: 0
         };
     },
-    onLoad(options) {
-        this.fromPage = options.from || '';
-        this.loadAddressList();
+    onLoad() {
+        this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
     },
     onShow() {
         this.loadAddressList();
     },
     methods: {
-        // 加载地址列表
+        goBack() {
+            uni.navigateBack();
+        },
+
         async loadAddressList() {
-            if (!app.globalData.isLogin) {
-                const local = uni.getStorageSync('guestAddresses') || [];
-                this.setData({ addressList: local });
-                return;
-            }
-            this.setData({ loading: true });
+            this.loading = true;
             try {
+                if (!app.globalData.isLogin) {
+                    const local = uni.getStorageSync('guestAddresses') || [];
+                    this.addressList = local;
+                    return;
+                }
                 const result = await api.getAddressList();
-                this.setData({ addressList: result || [] });
-            } catch (error) {
-                console.error('加载地址列表失败', error);
+                this.addressList = result || [];
+            } catch (e) {
                 uni.showToast({ title: '加载失败', icon: 'none' });
             } finally {
-                this.setData({ loading: false });
+                this.loading = false;
             }
         },
 
-        // 选择地址（从结算页跳转过来时）
-        selectAddress(e) {
-            const address = e.currentTarget.dataset.address;
-            if (this.fromPage === 'checkout') {
-                // 将选中的地址传回结算页
-                const pages = getCurrentPages();
-                const prevPage = pages[pages.length - 2];
-                if (prevPage) {
-                    prevPage.setData({
-                        selectedAddress: address,
-                        address: `${address.name} ${address.phone} ${address.province}${address.city}${address.district}${address.detail}`
-                    });
-                }
-                uni.navigateBack();
-            }
+        addAddress() {
+            uni.navigateTo({ url: '/pages/address-edit/address-edit' });
         },
 
-        // 设置默认地址
-        async setDefault(e) {
-            const addressId = e.currentTarget.dataset.id;
+        editAddress(item) {
+            uni.navigateTo({ url: `/pages/address-edit/address-edit?id=${item.id}` });
+        },
+
+        async setDefault(id) {
+            const item = this.addressList.find(a => a.id == id);
+            if (item && item.isDefault) return;
             if (!app.globalData.isLogin) {
                 let list = uni.getStorageSync('guestAddresses') || [];
-                list = list.map(a => ({ ...a, isDefault: a.id == addressId }));
+                list = list.map(a => ({ ...a, isDefault: a.id == id }));
                 uni.setStorageSync('guestAddresses', list);
-                this.setData({ addressList: list });
+                this.addressList = list;
                 return;
             }
             try {
-                await api.setDefaultAddress(addressId);
-                uni.showToast({ title: '设置成功', icon: 'success' });
+                await api.setDefaultAddress(id);
                 this.loadAddressList();
-            } catch (error) {
+            } catch (e) {
                 uni.showToast({ title: '设置失败', icon: 'none' });
             }
         },
 
-        // 编辑地址
-        editAddress(e) {
-            const address = e.currentTarget.dataset.address;
-            uni.navigateTo({
-                url: `/pages/address-edit/address-edit?id=${address.id}`
-            });
-        },
-
-        // 删除地址
-        deleteAddress(e) {
-            const addressId = e.currentTarget.dataset.id;
+        deleteAddress(id) {
             uni.showModal({
-                title: '确认删除',
-                content: '确定要删除这个地址吗？',
+                title: 'Delete Address',
+                content: 'Are you sure?',
                 success: async (res) => {
                     if (!res.confirm) return;
                     if (!app.globalData.isLogin) {
                         let list = uni.getStorageSync('guestAddresses') || [];
-                        list = list.filter(a => a.id != addressId);
+                        list = list.filter(a => a.id != id);
                         uni.setStorageSync('guestAddresses', list);
-                        this.setData({ addressList: list });
+                        this.addressList = list;
                         return;
                     }
                     try {
-                        await api.deleteAddress(addressId);
-                        uni.showToast({ title: '删除成功', icon: 'success' });
+                        await api.deleteAddress(id);
                         this.loadAddressList();
-                    } catch (error) {
-                        uni.showToast({ title: '删除失败', icon: 'none' });
+                    } catch (e) {
+                        uni.showToast({ title: 'Failed', icon: 'none' });
                     }
                 }
-            });
-        },
-
-        // 添加地址
-        addAddress() {
-            uni.navigateTo({
-                url: '/pages/address-edit/address-edit'
             });
         }
     }
 };
 </script>
+
 <style>
-/* pages/address/address.wxss */
-.address-container {
-    min-height: 100vh;
-    background-color: #f8f8f8;
-    padding: 20rpx;
-    padding-bottom: 120rpx;
-}
-
-/* 地址列表 */
-.address-list {
-    display: flex;
-    flex-direction: column;
-    gap: 20rpx;
-}
-
-.address-item {
+page {
     background-color: #fff;
-    border-radius: 16rpx;
-    padding: 30rpx;
-    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
 }
 
-.address-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20rpx;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 20rpx;
-}
-
-.user-name {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: #333;
-}
-
-.user-phone {
-    font-size: 28rpx;
-    color: #666;
-}
-
-.default-tag {
-    padding: 8rpx 16rpx;
-    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
-    color: #fff;
-    font-size: 24rpx;
-    border-radius: 20rpx;
-}
-
-.address-detail {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 20rpx;
-    padding: 20rpx;
-    background-color: #f8f8f8;
-    border-radius: 12rpx;
-}
-
-.address-icon {
-    font-size: 32rpx;
-    margin-right: 10rpx;
-}
-
-.address-text {
-    flex: 1;
-    font-size: 28rpx;
-    color: #333;
-    line-height: 1.6;
-}
-
-.address-actions {
-    display: flex;
-    gap: 20rpx;
-    padding-top: 20rpx;
-    border-top: 1rpx solid #e0e0e0;
-}
-
-.action-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8rpx;
-    padding: 16rpx;
-    background-color: #f5f5f5;
-    border-radius: 8rpx;
-    font-size: 26rpx;
-    color: #666;
-}
-
-.action-icon {
-    font-size: 28rpx;
-}
-
-/* 空状态 */
-.empty-address {
+.address-container {
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding-top: 200rpx;
+    background-color: #fff;
 }
 
-.empty-image {
-    width: 300rpx;
-    height: 300rpx;
-    margin-bottom: 40rpx;
+/* 导航栏 */
+.nav-bar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 30rpx 16rpx;
+    box-sizing: border-box;
+    border-bottom: 1rpx solid #f0ebe6;
+    flex-shrink: 0;
 }
 
-.empty-text {
+.nav-back {
+    font-size: 52rpx;
+    color: #2c1a0e;
+    line-height: 1;
+    width: 60rpx;
+}
+
+.nav-title {
     font-size: 32rpx;
-    color: #999;
-    margin-bottom: 60rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+    flex: 1;
+    text-align: center;
 }
 
-/* 添加地址按钮 */
-.add-address-btn {
-    position: fixed;
-    bottom: 40rpx;
-    left: 40rpx;
-    right: 40rpx;
-    height: 90rpx;
-    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
-    color: #fff;
-    border-radius: 50rpx;
+.add-btn {
+    flex-shrink: 0;
+    padding: 24rpx 30rpx 40rpx;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32rpx;
-    font-weight: bold;
-    box-shadow: 0 8rpx 16rpx rgba(170, 208, 143, 0.3);
 }
 
-/* 加载中 */
-.loading {
-    text-align: center;
-    padding: 40rpx;
-    color: #999;
+.add-btn-text {
     font-size: 28rpx;
+    color: #8B5E3C;
+}
+
+/* 列表 */
+.addr-scroll {
+    flex: 1;
+}
+
+.addr-empty {
+    padding: 100rpx 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.addr-empty-text {
+    font-size: 28rpx;
+    color: #a08060;
+}
+
+.addr-item {
+    display: flex;
+    align-items: center;
+    padding: 32rpx 30rpx;
+    border-bottom: 1rpx solid #f0ebe6;
+}
+
+.addr-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10rpx;
+    margin-right: 24rpx;
+}
+
+.addr-region {
+    font-size: 24rpx;
+    color: #a08060;
+}
+
+.addr-street {
+    font-size: 30rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+    line-height: 1.5;
+}
+
+.addr-bottom {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+}
+
+.addr-person {
+    font-size: 26rpx;
+    color: #2c1a0e;
+}
+
+.addr-edit-link {
+    font-size: 24rpx;
+    color: #a08060;
+    margin-top: 6rpx;
+}
+
+/* 单选圈 */
+.addr-radio {
+    padding: 10rpx 0 10rpx 16rpx;
+    flex-shrink: 0;
+}
+
+.addr-radio-outer {
+    width: 40rpx;
+    height: 40rpx;
+    border-radius: 50%;
+    border: 2rpx solid #d0c0b0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.addr-radio-selected {
+    border-color: #8B5E3C;
+}
+
+.addr-radio-inner {
+    width: 22rpx;
+    height: 22rpx;
+    border-radius: 50%;
+    background-color: #8B5E3C;
 }
 </style>

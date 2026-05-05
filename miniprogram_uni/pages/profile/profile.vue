@@ -4,20 +4,44 @@
 
             <!-- 用户信息头部 -->
             <view class="user-header">
-                <view class="user-left">
-                    <image :src="isLogin ? userInfo.avatar : '/static/images/icon/wode.png'" class="user-avatar" />
-                    <view class="user-info-text">
+                <image
+                    :src="isLogin ? userInfo.avatar : '/static/images/icon/wode.png'"
+                    class="user-avatar"
+                    @tap="handleAvatarTap"
+                />
+                <view class="user-info-text">
+                    <view class="user-name-row">
                         <text class="user-name">{{ isLogin ? userInfo.nickname : 'Hello, Guest' }}</text>
-                        <text class="user-sub">{{ isLogin ? '已登录' : '点击登录' }}</text>
+                        <view class="member-badge" v-if="isLogin">
+                            <text class="member-badge-text">会员</text>
+                        </view>
+                    </view>
+                    <text class="user-sub">{{ isLogin ? '已登录' : '点击头像登录' }}</text>
+                </view>
+                <view class="qr-icon-btn" v-if="isLogin" @tap="openQrPopup">
+                    <view class="qr-icon">
+                        <view class="qr-tl"><view class="qr-fi"></view></view>
+                        <view class="qr-tr"><view class="qr-fi"></view></view>
+                        <view class="qr-bl"><view class="qr-fi"></view></view>
+                        <view class="qr-br"><view class="qr-fi"></view></view>
+                        <view class="qr-d1"></view>
+                        <view class="qr-d2"></view>
+                        <view class="qr-d3"></view>
+                        <view class="qr-d4"></view>
+                        <view class="qr-d5"></view>
                     </view>
                 </view>
-                <view class="user-right">
-                    <view class="logout-btn" v-if="isLogin" @tap="handleLogout">
-                        <text class="logout-text">退出</text>
+            </view>
+
+            <!-- QR码弹窗 -->
+            <view v-if="showQrPopup" class="qr-overlay" @tap="closeQrPopup">
+                <view class="qr-popup" @tap.stop>
+                    <text class="qr-popup-name">{{ userInfo && userInfo.nickname }}</text>
+                    <text class="qr-popup-sub">会员二维码</text>
+                    <view class="qr-popup-img-box">
+                        <image src="/static/images/icon/paynow-qr.png" mode="aspectFit" class="qr-popup-img" />
                     </view>
-                    <view class="login-btn" v-else @tap="handleLogin">
-                        <text class="login-btn-text">登录</text>
-                    </view>
+                    <text class="qr-popup-tip">向商家出示二维码</text>
                 </view>
             </view>
 
@@ -35,38 +59,35 @@
             </view>
 
             <!-- 菜单 -->
-            <view class="menu-group">
+            <view class="menu-list">
                 <view class="menu-item" @tap="goToOrders">
-                    <image src="/static/images/me/wodedingdan.png" class="menu-icon" />
-                    <text class="menu-text">我的订单</text>
+                    <text class="menu-text">My Orders</text>
                     <text class="menu-arrow">›</text>
                 </view>
                 <view class="menu-divider" />
                 <view class="menu-item" @tap="handleMenuClick" data-type="address">
-                    <image src="/static/images/me/shouhuodizhi.png" class="menu-icon" />
-                    <text class="menu-text">收货地址</text>
+                    <text class="menu-text">My Adresses</text>
                     <text class="menu-arrow">›</text>
                 </view>
-            </view>
-
-            <view class="menu-group" style="margin-top: 20rpx;">
+                <view class="menu-divider" />
                 <view class="menu-item" @tap="handleMenuClick" data-type="usage">
-                    <image src="/static/images/me/使用须知.png" class="menu-icon" />
-                    <text class="menu-text">使用须知</text>
+                    <text class="menu-text">Terms of Use</text>
                     <text class="menu-arrow">›</text>
                 </view>
                 <view class="menu-divider" />
                 <view class="menu-item" @tap="handleMenuClick" data-type="privacy">
-                    <image src="/static/images/me/yinsi.png" class="menu-icon" />
-                    <text class="menu-text">隐私条款</text>
+                    <text class="menu-text">Privacy Policy</text>
                     <text class="menu-arrow">›</text>
                 </view>
                 <view class="menu-divider" />
                 <view class="menu-item" @tap="handleMenuClick" data-type="recruitment">
-                    <image src="/static/images/me/yuangongzhaopin.png" class="menu-icon" />
-                    <text class="menu-text">员工招聘</text>
+                    <text class="menu-text">Join Us</text>
                     <text class="menu-arrow">›</text>
                 </view>
+            </view>
+
+            <view class="logout-link" v-if="isLogin" @tap="handleLogout">
+                <text class="logout-link-text">退出登录</text>
             </view>
 
             <view class="version-info">
@@ -88,7 +109,8 @@ export default {
             orderCount: 0,
             totalSpent: '0.00',
             likeCount: 0,
-            statusBarHeight: 0
+            statusBarHeight: 0,
+            showQrPopup: false
         };
     },
     onLoad() {
@@ -97,9 +119,7 @@ export default {
     },
     onShow() {
         this.checkLoginStatus();
-        if (this.isLogin) {
-            this.loadUserStats();
-        }
+        this.loadUserStats();
     },
     methods: {
         // 检查登录状态
@@ -114,10 +134,11 @@ export default {
         async loadUserStats() {
             try {
                 // 从后端获取用户订单统计
-                const result = await api.getUserOrders({
-                    page: 1,
-                    pageSize: 1000
-                });
+                const params = { page: 1, pageSize: 1000 };
+                if (!app.globalData.isLogin) {
+                    params.guestId = app.globalData.guestId;
+                }
+                const result = await api.getUserOrders(params);
                 const orders = result.records || [];
                 const orderCount = orders.length;
 
@@ -232,13 +253,6 @@ export default {
 
         // 跳转到订单页面
         goToOrders() {
-            if (!this.isLogin) {
-                uni.showToast({
-                    title: '请先登录',
-                    icon: 'none'
-                });
-                return;
-            }
             uni.switchTab({
                 url: '/pages/orderList/orderList'
             });
@@ -333,6 +347,20 @@ export default {
             });
         },
 
+        handleAvatarTap() {
+            if (!this.isLogin) {
+                this.handleLogin();
+            }
+        },
+
+        openQrPopup() {
+            this.setData({ showQrPopup: true });
+        },
+
+        closeQrPopup() {
+            this.setData({ showQrPopup: false });
+        },
+
         goToEditProfile() {
             uni.navigateTo({
                 url: '/pages/profile-edit/profile-edit'
@@ -343,7 +371,7 @@ export default {
 </script>
 <style>
 .profile-container {
-    background-color: #f0f0f0;
+    background-color: #F8F8F6;
     min-height: 100vh;
 }
 
@@ -356,59 +384,167 @@ export default {
 .user-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 20rpx 30rpx 30rpx;
-}
-
-.user-left {
-    display: flex;
-    align-items: center;
+    padding: 24rpx 30rpx 30rpx;
 }
 
 .user-avatar {
-    width: 100rpx;
-    height: 100rpx;
+    width: 110rpx;
+    height: 110rpx;
     border-radius: 50%;
-    margin-right: 20rpx;
+    border: 4rpx solid #f0e6dc;
+    margin-right: 24rpx;
+    flex-shrink: 0;
+}
+
+.user-info-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8rpx;
 }
 
 .user-name {
-    font-size: 32rpx;
+    font-size: 36rpx;
     font-weight: bold;
     color: #2C1810;
-    display: block;
-    margin-bottom: 6rpx;
+    margin-right: 12rpx;
+}
+
+.member-badge {
+    background: #f0e6dc;
+    border-radius: 20rpx;
+    padding: 4rpx 14rpx;
+}
+
+.member-badge-text {
+    font-size: 20rpx;
+    color: #8B5E3C;
+    font-weight: 500;
 }
 
 .user-sub {
-    font-size: 22rpx;
+    font-size: 24rpx;
     color: #9B7B5B;
 }
 
-.logout-btn, .login-btn {
-    padding: 12rpx 28rpx;
-    border: 2rpx solid #5D3A1A;
-    border-radius: 40rpx;
+/* QR图标 */
+.qr-icon-btn {
+    padding: 10rpx;
+    flex-shrink: 0;
 }
 
-.logout-text, .login-btn-text {
+.qr-icon {
+    width: 50rpx;
+    height: 50rpx;
+    position: relative;
+}
+
+/* 三个角定位方块 */
+.qr-tl, .qr-tr, .qr-bl {
+    position: absolute;
+    width: 18rpx;
+    height: 18rpx;
+    border: 3rpx solid #5D3A1A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.qr-tl { top: 0; left: 0; }
+.qr-tr { top: 0; right: 0; }
+.qr-bl { bottom: 0; left: 0; }
+.qr-br { bottom: 0; right: 0; }
+
+/* 角方块里的实心小方块 */
+.qr-fi {
+    width: 8rpx;
+    height: 8rpx;
+    background: #5D3A1A;
+}
+
+/* 中间随机数据点 */
+.qr-d1, .qr-d2, .qr-d3, .qr-d4, .qr-d5 {
+    position: absolute;
+    width: 5rpx;
+    height: 5rpx;
+    background: #5D3A1A;
+    border-radius: 1rpx;
+}
+.qr-d1 { top: 2rpx;  left: 24rpx; }
+.qr-d2 { top: 9rpx;  left: 30rpx; }
+.qr-d3 { top: 24rpx; left: 24rpx; }
+.qr-d4 { bottom: 2rpx;  right: 2rpx; }
+.qr-d5 { bottom: 9rpx; right: 10rpx; }
+
+/* QR弹窗 */
+.qr-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-popup {
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 50rpx 60rpx;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.qr-popup-name {
+    font-size: 36rpx;
+    font-weight: bold;
+    color: #2C1810;
+    margin-bottom: 8rpx;
+}
+
+.qr-popup-sub {
     font-size: 24rpx;
-    color: #5D3A1A;
+    color: #9B7B5B;
+    margin-bottom: 40rpx;
 }
 
-/* 会员卡 */
-.member-card {
-    margin: 0 24rpx 30rpx;
-    border-radius: 20rpx;
-    overflow: hidden;
-    box-shadow: 0 8rpx 24rpx rgba(93,58,26,0.15);
+.qr-popup-img-box {
+    width: 320rpx;
+    height: 320rpx;
+    border: 1rpx solid #eee;
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30rpx;
 }
 
-.member-card-img {
-    width: 100%;
-    height: 280rpx;
-    display: block;
+.qr-popup-img {
+    width: 300rpx;
+    height: 300rpx;
 }
+
+.qr-popup-tip {
+    font-size: 24rpx;
+    color: #bbb;
+}
+
+/* 退出登录 */
+.logout-link {
+    text-align: center;
+    padding: 40rpx 0 20rpx;
+}
+
+.logout-link-text {
+    font-size: 28rpx;
+    color: #bbb;
+}
+
 
 /* MY ACCOUNT */
 .section-title {

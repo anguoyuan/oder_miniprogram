@@ -143,10 +143,11 @@ class OrderController {
    */
   static async getAllOrders(req, res) {
     try {
-      const { status, page: pageNum = 1, pageSize = 10 } = req.query;
-      
+      const { status, paymentStatus, page: pageNum = 1, pageSize = 10 } = req.query;
+
       const result = await OrderModel.getAllOrders(
         status,
+        paymentStatus,
         parseInt(pageNum),
         parseInt(pageSize)
       );
@@ -192,6 +193,17 @@ class OrderController {
     }
   }
   
+  static async updatePaymentStatus(req, res) {
+    try {
+      const { orderId, paymentStatus } = req.body;
+      await OrderModel.updatePaymentStatus(orderId, paymentStatus);
+      res.json(success(null, '付款状态已更新'));
+    } catch (err) {
+      console.error('更新付款状态失败:', err);
+      res.json(error(err.message || '更新付款状态失败'));
+    }
+  }
+
   /**
    * 取消订单
    */

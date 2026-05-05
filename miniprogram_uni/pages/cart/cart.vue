@@ -308,10 +308,10 @@ export default {
                 });
                 return;
             }
-
+			const itemsCount = selectedItems.length;
             // 跳转到结算页面
             uni.navigateTo({
-                url: '/pages/checkout/checkout'
+                url: `/pages/checkout/checkout?total=${totalPrice}&count=${itemsCount}`
             });
         },
 
@@ -364,8 +364,10 @@ export default {
 
 .item-info {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .item-name {
@@ -373,6 +375,9 @@ export default {
     font-weight: bold;
     color: #333;
     margin-bottom: 10rpx;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .item-specs {
