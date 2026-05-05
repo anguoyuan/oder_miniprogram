@@ -1,13 +1,12 @@
 <template>
-    <view class="address-container">
-        <!-- 自定义导航栏 -->
+    <view class="address-page">
+        <!-- 顶部导航 -->
         <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px', height: (statusBarHeight + 44) + 'px' }">
-            <text class="nav-back" @tap="goBack">‹</text>
-            <text class="nav-title">My Addresses</text>
+            <text class="nav-back" @tap="goBack">←</text>
+            <text class="nav-title">Address</text>
             <view style="width: 60rpx;"></view>
         </view>
 
-        <!-- 地址列表 -->
         <scroll-view scroll-y class="addr-scroll">
             <view v-if="loading" class="addr-empty">
                 <text class="addr-empty-text">Loading...</text>
@@ -15,29 +14,19 @@
             <view v-else-if="addressList.length === 0" class="addr-empty">
                 <text class="addr-empty-text">No addresses yet</text>
             </view>
-            <view v-for="(item, i) in addressList" :key="i" class="addr-item" @tap="setDefault(item.id)">
-                <!-- 左侧内容 -->
-                <view class="addr-main">
-                    <text class="addr-region">{{ item.province }}{{ item.city }}{{ item.district }}</text>
-                    <text class="addr-street">{{ item.detail }}</text>
-                    <view class="addr-bottom">
-                        <text class="addr-person">{{ item.name }}  {{ item.phone }}</text>
-                    </view>
-                    <text class="addr-edit-link" @tap.stop="editAddress(item)">Edit</text>
+
+            <view v-for="(item, i) in addressList" :key="i" class="addr-card" @tap="setDefault(item.id)">
+                <view class="addr-card-content">
+                    <text class="addr-name">{{ item.name }}  {{ item.phone }}</text>
+                    <text class="addr-detail">{{ item.province }}{{ item.city }}{{ item.district }}{{ item.detail }}</text>
+                    <text class="addr-edit" @tap.stop="editAddress(item)">Edit</text>
                 </view>
-                <!-- 右侧单选圈 -->
-                <view class="addr-radio" @tap.stop="setDefault(item.id)">
-                    <view :class="['addr-radio-outer', item.isDefault ? 'addr-radio-selected' : '']">
-                        <view v-if="item.isDefault" class="addr-radio-inner"></view>
-                    </view>
-                </view>
+                <view :class="['addr-radio', item.isDefault ? 'active' : '']"></view>
             </view>
 
-            <view class="add-btn" @tap="addAddress">
-                <text class="add-btn-text">+ Add New Address</text>
+            <view class="add-link-row" @tap="addAddress">
+                <text class="add-link">+ 添加新地址</text>
             </view>
-
-            <view style="height: 40rpx;"></view>
         </scroll-view>
     </view>
 </template>
@@ -63,13 +52,11 @@ export default {
         goBack() {
             uni.navigateBack();
         },
-
         async loadAddressList() {
             this.loading = true;
             try {
                 if (!app.globalData.isLogin) {
-                    const local = uni.getStorageSync('guestAddresses') || [];
-                    this.addressList = local;
+                    this.addressList = uni.getStorageSync('guestAddresses') || [];
                     return;
                 }
                 const result = await api.getAddressList();
@@ -80,15 +67,12 @@ export default {
                 this.loading = false;
             }
         },
-
         addAddress() {
             uni.navigateTo({ url: '/pages/address-edit/address-edit' });
         },
-
         editAddress(item) {
             uni.navigateTo({ url: `/pages/address-edit/address-edit?id=${item.id}` });
         },
-
         async setDefault(id) {
             const item = this.addressList.find(a => a.id == id);
             if (item && item.isDefault) return;
@@ -105,29 +89,6 @@ export default {
             } catch (e) {
                 uni.showToast({ title: '设置失败', icon: 'none' });
             }
-        },
-
-        deleteAddress(id) {
-            uni.showModal({
-                title: 'Delete Address',
-                content: 'Are you sure?',
-                success: async (res) => {
-                    if (!res.confirm) return;
-                    if (!app.globalData.isLogin) {
-                        let list = uni.getStorageSync('guestAddresses') || [];
-                        list = list.filter(a => a.id != id);
-                        uni.setStorageSync('guestAddresses', list);
-                        this.addressList = list;
-                        return;
-                    }
-                    try {
-                        await api.deleteAddress(id);
-                        this.loadAddressList();
-                    } catch (e) {
-                        uni.showToast({ title: 'Failed', icon: 'none' });
-                    }
-                }
-            });
         }
     }
 };
@@ -135,31 +96,30 @@ export default {
 
 <style>
 page {
-    background-color: #fff;
+    background-color: #f5f5f5;
 }
 
-.address-container {
-    height: 100vh;
+.address-page {
+    min-height: 100vh;
+    background-color: #f5f5f5;
     display: flex;
     flex-direction: column;
-    background-color: #fff;
 }
 
-/* 导航栏 */
 .nav-bar {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     padding: 0 30rpx 16rpx;
     box-sizing: border-box;
-    border-bottom: 1rpx solid #f0ebe6;
+    background-color: #fff;
+    border-bottom: 1rpx solid #eee;
     flex-shrink: 0;
 }
 
 .nav-back {
-    font-size: 52rpx;
+    font-size: 40rpx;
     color: #2c1a0e;
-    line-height: 1;
     width: 60rpx;
 }
 
@@ -171,26 +131,13 @@ page {
     text-align: center;
 }
 
-.add-btn {
-    flex-shrink: 0;
-    padding: 24rpx 30rpx 40rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.add-btn-text {
-    font-size: 28rpx;
-    color: #8B5E3C;
-}
-
-/* 列表 */
 .addr-scroll {
     flex: 1;
+    padding: 24rpx 0;
 }
 
 .addr-empty {
-    padding: 100rpx 0;
+    padding: 120rpx 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -201,74 +148,63 @@ page {
     color: #a08060;
 }
 
-.addr-item {
+.addr-card {
+    background: #fff;
+    margin: 0 24rpx 20rpx;
+    border-radius: 16rpx;
+    padding: 28rpx 24rpx;
     display: flex;
     align-items: center;
-    padding: 32rpx 30rpx;
-    border-bottom: 1rpx solid #f0ebe6;
+    gap: 20rpx;
 }
 
-.addr-main {
+.addr-card-content {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 10rpx;
-    margin-right: 24rpx;
 }
 
-.addr-region {
-    font-size: 24rpx;
-    color: #a08060;
-}
-
-.addr-street {
-    font-size: 30rpx;
-    font-weight: bold;
-    color: #2c1a0e;
-    line-height: 1.5;
-}
-
-.addr-bottom {
-    display: flex;
-    align-items: center;
-    gap: 16rpx;
-}
-
-.addr-person {
-    font-size: 26rpx;
-    color: #2c1a0e;
-}
-
-.addr-edit-link {
-    font-size: 24rpx;
-    color: #a08060;
-    margin-top: 6rpx;
-}
-
-/* 单选圈 */
 .addr-radio {
-    padding: 10rpx 0 10rpx 16rpx;
-    flex-shrink: 0;
-}
-
-.addr-radio-outer {
     width: 40rpx;
     height: 40rpx;
     border-radius: 50%;
     border: 2rpx solid #d0c0b0;
+    flex-shrink: 0;
+}
+
+.addr-radio.active {
+    border-color: #2c1a0e;
+    background: #2c1a0e;
+    box-shadow: inset 0 0 0 6rpx #fff;
+}
+
+.addr-name {
+    font-size: 28rpx;
+    font-weight: bold;
+    color: #2c1a0e;
+    display: block;
+    margin-bottom: 8rpx;
+}
+
+.addr-edit {
+    font-size: 24rpx;
+    color: #C4A882;
+    display: block;
+    margin-top: 12rpx;
+}
+
+.addr-detail {
+    font-size: 26rpx;
+    color: #888;
+    line-height: 1.5;
+}
+
+.add-link-row {
+    padding: 16rpx 0 40rpx;
     display: flex;
-    align-items: center;
     justify-content: center;
 }
 
-.addr-radio-selected {
-    border-color: #8B5E3C;
-}
-
-.addr-radio-inner {
-    width: 22rpx;
-    height: 22rpx;
-    border-radius: 50%;
-    background-color: #8B5E3C;
+.add-link {
+    font-size: 26rpx;
+    color: #a08060;
 }
 </style>

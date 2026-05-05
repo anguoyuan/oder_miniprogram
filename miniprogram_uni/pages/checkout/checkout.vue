@@ -925,7 +925,7 @@ page {
     display: flex;
     align-items: center;
     padding: 24rpx 30rpx;
-    padding-top: calc(var(--status-bar-height) + 24rpx);
+    padding-top: calc(var(--status-bar-height) + 50rpx);
     border-bottom: 1rpx solid #f0ebe6;
     flex-shrink: 0;
 }
@@ -1278,10 +1278,14 @@ page {
 }
 .paynow-body {
     padding: 0 40rpx 30rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .paynow-amount-box {
     text-align: center;
     margin-bottom: 30rpx;
+    width: 100%;
 }
 .paynow-amount-label {
     display: block;
@@ -1297,7 +1301,7 @@ page {
 .paynow-qr-box {
     width: 360rpx;
     height: 360rpx;
-    margin: 0 auto 30rpx;
+    margin-bottom: 30rpx;
     border: 1rpx solid #eee;
     border-radius: 16rpx;
     display: flex;
@@ -1314,6 +1318,8 @@ page {
     padding: 24rpx;
     text-align: center;
     margin-bottom: 24rpx;
+    width: 100%;
+    box-sizing: border-box;
 }
 .paynow-account-label {
     display: block;
@@ -1329,6 +1335,7 @@ page {
 }
 .paynow-tips {
     text-align: center;
+    width: 100%;
 }
 .paynow-tip {
     display: block;

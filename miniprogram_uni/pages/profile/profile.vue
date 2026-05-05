@@ -2,8 +2,8 @@
     <view class="profile-container">
         <scroll-view scroll-y class="scroll-wrap" :style="{ paddingTop: (statusBarHeight + 20) + 'px' }">
 
-            <!-- 用户信息头部 -->
-            <view class="user-header">
+            <!-- 灰色头部：横排，头像+名字+QR -->
+            <view class="gray-header">
                 <image
                     :src="isLogin ? userInfo.avatar : '/static/images/icon/wode.png'"
                     class="user-avatar"
@@ -16,10 +16,9 @@
                             <text class="member-badge-text">会员</text>
                         </view>
                     </view>
-                    <text class="user-sub">{{ isLogin ? '已登录' : '点击头像登录' }}</text>
                 </view>
                 <view class="qr-icon-btn" v-if="isLogin" @tap="openQrPopup">
-                    <view class="qr-icon">
+                    <view class="qr-icon-sm">
                         <view class="qr-tl"><view class="qr-fi"></view></view>
                         <view class="qr-tr"><view class="qr-fi"></view></view>
                         <view class="qr-bl"><view class="qr-fi"></view></view>
@@ -45,53 +44,64 @@
                 </view>
             </view>
 
-            <!-- MY ACCOUNT -->
-            <view class="section-title">MY ACCOUNT</view>
-            <view class="stats-row">
-                <view class="stats-card" @tap="goToOrders">
-                    <text class="stats-num">{{ orderCount }}</text>
-                    <text class="stats-label">ORDERS</text>
-                </view>
-                <view class="stats-card">
-                    <text class="stats-num">${{ totalSpent }}</text>
-                    <text class="stats-label">TOTAL SPENT</text>
-                </view>
-            </view>
+            <!-- 白色区域（头像压在分割线正中） -->
+            <view class="white-section">
 
-            <!-- 菜单 -->
-            <view class="menu-list">
-                <view class="menu-item" @tap="goToOrders">
-                    <text class="menu-text">My Orders</text>
-                    <text class="menu-arrow">›</text>
+                <!-- 已登录：对齐头像右侧 -->
+                <view class="sub-row">
+                    <view class="avatar-space" />
+                    <text class="user-sub-white">{{ isLogin ? '已登录' : '点击头像登录' }}</text>
                 </view>
-                <view class="menu-divider" />
-                <view class="menu-item" @tap="handleMenuClick" data-type="address">
-                    <text class="menu-text">My Adresses</text>
-                    <text class="menu-arrow">›</text>
-                </view>
-                <view class="menu-divider" />
-                <view class="menu-item" @tap="handleMenuClick" data-type="usage">
-                    <text class="menu-text">Terms of Use</text>
-                    <text class="menu-arrow">›</text>
-                </view>
-                <view class="menu-divider" />
-                <view class="menu-item" @tap="handleMenuClick" data-type="privacy">
-                    <text class="menu-text">Privacy Policy</text>
-                    <text class="menu-arrow">›</text>
-                </view>
-                <view class="menu-divider" />
-                <view class="menu-item" @tap="handleMenuClick" data-type="recruitment">
-                    <text class="menu-text">Join Us</text>
-                    <text class="menu-arrow">›</text>
-                </view>
-            </view>
 
-            <view class="logout-link" v-if="isLogin" @tap="handleLogout">
-                <text class="logout-link-text">退出登录</text>
-            </view>
+                <!-- 统计数据两栏 -->
+                <view class="stats-two-row">
+                    <view class="stats-two-item">
+                        <text class="stats-num">0</text>
+                        <text class="stats-label">Voucher</text>
+                    </view>
+                    <view class="stats-sep" />
+                    <view class="stats-two-item">
+                        <text class="stats-num">{{ (totalSpent * 10) | 0 }}</text>
+                        <text class="stats-label">Credit</text>
+                    </view>
+                </view>
 
-            <view class="version-info">
-                <text class="version-text">v1.0.0</text>
+                <!-- 菜单 -->
+                <view class="menu-card">
+                    <view class="menu-item" @tap="goToOrders">
+                        <text class="menu-text">My Orders</text>
+                        <text class="menu-arrow">›</text>
+                    </view>
+                    <view class="menu-divider" />
+                    <view class="menu-item" @tap="handleMenuClick" data-type="address">
+                        <text class="menu-text">Address</text>
+                        <text class="menu-arrow">›</text>
+                    </view>
+                    <view class="menu-divider" />
+                    <view class="menu-item" @tap="handleMenuClick" data-type="usage">
+                        <text class="menu-text">Terms of use</text>
+                        <text class="menu-arrow">›</text>
+                    </view>
+                    <view class="menu-divider" />
+                    <view class="menu-item" @tap="handleMenuClick" data-type="privacy">
+                        <text class="menu-text">Privacy</text>
+                        <text class="menu-arrow">›</text>
+                    </view>
+                    <view class="menu-divider" />
+                    <view class="menu-item" @tap="handleMenuClick" data-type="recruitment">
+                        <text class="menu-text">Contact Us</text>
+                        <text class="menu-arrow">›</text>
+                    </view>
+                </view>
+
+                <view class="logout-link" v-if="isLogin" @tap="handleLogout">
+                    <text class="logout-link-text">退出登录</text>
+                </view>
+
+                <view class="version-info">
+                    <text class="version-text">v1.0.0</text>
+                </view>
+
             </view>
 
         </scroll-view>
@@ -371,7 +381,7 @@ export default {
 </script>
 <style>
 .profile-container {
-    background-color: #F8F8F6;
+    background-color: #f8f8f8;
     min-height: 100vh;
 }
 
@@ -380,11 +390,12 @@ export default {
     padding-bottom: 40rpx;
 }
 
-/* 用户头部 */
-.user-header {
+/* 灰色头部：横排，底部对齐 */
+.gray-header {
+    background: #f8f8f8;
     display: flex;
-    align-items: center;
-    padding: 24rpx 30rpx 30rpx;
+    align-items: flex-end;
+    padding: 24rpx 30rpx 0;
 }
 
 .user-avatar {
@@ -394,17 +405,54 @@ export default {
     border: 4rpx solid #f0e6dc;
     margin-right: 24rpx;
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+/* 白色区域：上移55rpx，头像和QR正中压线 */
+.white-section {
+    background: #fff;
+    margin-top: -55rpx;
+    min-height: 100vh;
+    padding-top: 10rpx;
+}
+
+/* 已登录对齐头像右侧 */
+.sub-row {
+    display: flex;
+    align-items: center;
+    padding: 0 30rpx 16rpx;
+}
+
+.avatar-space {
+    width: 134rpx;
+    flex-shrink: 0;
+}
+
+.user-sub-white {
+    font-size: 24rpx;
+    color: #9B7B5B;
+    padding-left: 26rpx;
+}
+
+/* QR 小图标 */
+.qr-icon-sm {
+    width: 36rpx;
+    height: 36rpx;
+    position: relative;
+    z-index: 2;
 }
 
 .user-info-text {
     flex: 1;
     min-width: 0;
+    margin-bottom: 48rpx;
 }
 
 .user-name-row {
     display: flex;
     align-items: center;
-    margin-bottom: 8rpx;
+    margin-bottom: 16rpx;
 }
 
 .user-name {
@@ -417,13 +465,17 @@ export default {
 .member-badge {
     background: #f0e6dc;
     border-radius: 20rpx;
-    padding: 4rpx 14rpx;
+    padding: 8rpx 14rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .member-badge-text {
     font-size: 20rpx;
     color: #8B5E3C;
     font-weight: 500;
+    line-height: 1;
 }
 
 .user-sub {
@@ -435,6 +487,7 @@ export default {
 .qr-icon-btn {
     padding: 10rpx;
     flex-shrink: 0;
+    margin-bottom: 32rpx;
 }
 
 .qr-icon {
@@ -546,64 +599,56 @@ export default {
 }
 
 
-/* MY ACCOUNT */
-.section-title {
-    font-size: 26rpx;
-    font-weight: bold;
-    color: #9B7B5B;
-    letter-spacing: 3rpx;
-    padding: 0 30rpx 16rpx;
-}
-
-.stats-row {
+/* 统计卡片（合并成一个） */
+.stats-two-row {
     display: flex;
-    gap: 20rpx;
-    padding: 0 24rpx 30rpx;
+    align-items: center;
+    padding: 24rpx 30rpx 0rpx;
 }
 
-.stats-card {
+.stats-two-item {
     flex: 1;
-    background: #fff;
-    border-radius: 16rpx;
-    padding: 28rpx 24rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stats-sep {
+    width: 1rpx;
+    height: 50rpx;
+    background: #e0e0e0;
+}
+
+.section-divider {
+    height: 16rpx;
+    background: #f8f8f8;
 }
 
 .stats-num {
     font-size: 44rpx;
     font-weight: bold;
     color: #2C1810;
-    display: block;
     margin-bottom: 8rpx;
 }
 
 .stats-label {
-    font-size: 20rpx;
+    font-size: 22rpx;
     color: #9B7B5B;
-    letter-spacing: 1rpx;
 }
 
-/* 菜单 */
-.menu-group {
-    background: #fff;
-    border-radius: 16rpx;
+/* 菜单列表 */
+.menu-card {
     margin: 0 24rpx;
-    overflow: hidden;
 }
 
 .menu-item {
     display: flex;
     align-items: center;
-    padding: 28rpx 24rpx;
+    padding: 30rpx 24rpx;
 }
 
 .menu-item:active {
     background-color: #f5f5f5;
-}
-
-.menu-icon {
-    width: 40rpx;
-    height: 40rpx;
-    margin-right: 20rpx;
 }
 
 .menu-text {
