@@ -51,6 +51,13 @@ if (!fs.existsSync(uploadDir)) {
 // 静态文件服务
 app.use('/api/upload', express.static(uploadDir));
 
+// 后台管理页面
+const adminDir = path.join(__dirname, '..', '..', 'admin', 'dist');
+app.use('/admin', express.static(adminDir));
+app.get('/admin/*', (req, res) => {
+  res.sendFile(path.join(adminDir, 'index.html'));
+});
+
 // API路由
 app.use('/api', routes);
 
