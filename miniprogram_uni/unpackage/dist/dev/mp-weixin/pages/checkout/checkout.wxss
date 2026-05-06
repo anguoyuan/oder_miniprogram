@@ -579,12 +579,83 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* pages/checkout/checkout.wxss */
-.checkout-container {
-    min-height: 100vh;
+page {
     background-color: #f8f8f8;
-    padding-top: 0;
-    padding-bottom: 120rpx;
+    height: 100%;
+}
+.checkout-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f8f8;
+}
+.checkout-body {
+    flex: 1;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+.remark-section {
+    margin-bottom: 0;
 }
 .page-header {
     position: relative;
@@ -811,7 +882,7 @@
     display: flex;
     align-items: center;
     padding: 24rpx 30rpx;
-    padding-top: calc(25px + 24rpx);
+    padding-top: calc(25px + 50rpx);
     border-bottom: 1rpx solid #f0ebe6;
     flex-shrink: 0;
 }
@@ -1062,10 +1133,7 @@
 }
 /* 底部结算栏 */
 .checkout-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    flex-shrink: 0;
     background-color: #fff;
     padding: 20rpx 30rpx 40rpx;
     box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.08);
@@ -1085,109 +1153,121 @@
 .submit-btn.disabled {
     opacity: 0.5;
 }
+/* PayNow 弹窗 */
+.paynow-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .paynow-popup {
+    background: #fff;
+    border-radius: 24rpx;
     width: 90%;
     max-width: 650rpx;
-    background-color: #fff;
-    border-radius: 24rpx;
-    margin: auto;
     overflow: hidden;
 }
 .paynow-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 30rpx 30rpx 20rpx;
-    border-bottom: 1rpx solid #f0ebe6;
+    align-items: center;
+    padding: 40rpx 40rpx 20rpx;
 }
 .paynow-title {
-    font-size: 32rpx;
+    font-size: 36rpx;
     font-weight: bold;
     color: #2c1a0e;
 }
 .paynow-close {
     font-size: 36rpx;
     color: #999;
-    padding: 8rpx;
-    line-height: 1;
+    padding: 10rpx;
 }
 .paynow-body {
-    padding: 30rpx;
+    padding: 0 40rpx 30rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .paynow-amount-box {
     text-align: center;
     margin-bottom: 30rpx;
+    width: 100%;
 }
 .paynow-amount-label {
     display: block;
-    font-size: 24rpx;
-    color: #a08060;
-    margin-bottom: 8rpx;
+    font-size: 26rpx;
+    color: #999;
+    margin-bottom: 10rpx;
 }
 .paynow-amount {
-    font-size: 52rpx;
+    font-size: 64rpx;
     font-weight: bold;
     color: #2c1a0e;
 }
 .paynow-qr-box {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30rpx;
-}
-.paynow-qr-image {
     width: 360rpx;
     height: 360rpx;
-    border-radius: 16rpx;
-    border: 2rpx solid #f0ebe6;
-}
-.paynow-account-box {
-    text-align: center;
     margin-bottom: 30rpx;
-    padding: 24rpx;
-    background-color: #faf7f4;
-    border-radius: 12rpx;
-}
-.paynow-account-label {
-    display: block;
-    font-size: 24rpx;
-    color: #a08060;
-    margin-bottom: 10rpx;
-}
-.paynow-account-number {
-    font-size: 36rpx;
-    font-weight: bold;
-    color: #2c1a0e;
-    letter-spacing: 2rpx;
-}
-.paynow-tips {
-    margin-bottom: 10rpx;
-}
-.paynow-tip {
-    display: block;
-    font-size: 22rpx;
-    color: #a08060;
-    line-height: 1.8;
-    text-align: center;
-}
-.paynow-tip-highlight {
-    display: block;
-    font-size: 24rpx;
-    color: #e67e22;
-    font-weight: 500;
-    text-align: center;
-    margin-top: 8rpx;
-}
-.paynow-confirm-btn {
-    margin: 0 30rpx 30rpx;
-    background-color: #2c1a0e;
-    height: 88rpx;
+    border: 1rpx solid #eee;
     border-radius: 16rpx;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 30rpx;
+}
+.paynow-qr-image {
+    width: 340rpx;
+    height: 340rpx;
+}
+.paynow-account-box {
+    background: #fdf6f0;
+    border-radius: 16rpx;
+    padding: 24rpx;
+    text-align: center;
+    margin-bottom: 24rpx;
+    width: 100%;
+    box-sizing: border-box;
+}
+.paynow-account-label {
+    display: block;
+    font-size: 24rpx;
+    color: #999;
+    margin-bottom: 10rpx;
+}
+.paynow-account-number {
+    font-size: 40rpx;
     font-weight: bold;
+    color: #2c1a0e;
+    letter-spacing: 4rpx;
+}
+.paynow-tips {
+    text-align: center;
+    width: 100%;
+}
+.paynow-tip {
+    display: block;
+    font-size: 24rpx;
+    color: #999;
+    margin-bottom: 6rpx;
+}
+.paynow-tip-highlight {
+    display: block;
+    font-size: 24rpx;
+    color: #c8873a;
+    margin-top: 6rpx;
+}
+.paynow-confirm-btn {
+    margin: 0 40rpx 40rpx;
+    background: #2c1a0e;
     color: #fff;
+    text-align: center;
+    padding: 30rpx;
+    border-radius: 50rpx;
+    font-size: 32rpx;
+    font-weight: bold;
 }
 .paynow-confirm-btn.disabled {
     opacity: 0.5;

@@ -2,7 +2,7 @@
     <view class="address-page">
         <!-- 顶部导航 -->
         <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px', height: (statusBarHeight + 44) + 'px' }">
-            <text class="nav-back" @tap="goBack">←</text>
+            <view class="nav-back" @tap="goBack">‹</view>
             <text class="nav-title">Address</text>
             <view style="width: 60rpx;"></view>
         </view>
@@ -108,9 +108,9 @@ page {
 
 .nav-bar {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
-    padding: 0 30rpx 16rpx;
+    padding: 0 30rpx;
     box-sizing: border-box;
     background-color: #fff;
     border-bottom: 1rpx solid #eee;
@@ -118,14 +118,19 @@ page {
 }
 
 .nav-back {
-    font-size: 40rpx;
-    color: #2c1a0e;
+    display: flex;
+    align-items: center;
     width: 60rpx;
+    height: 44px;
+    font-size: 52rpx;
+    margin-top: -3px;
+    color: #2c1a0e;
 }
 
 .nav-title {
     font-size: 32rpx;
     font-weight: bold;
+    line-height: 44px;
     color: #2c1a0e;
     flex: 1;
     text-align: center;

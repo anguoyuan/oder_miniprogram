@@ -102,6 +102,29 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
+  if (!_vm._isMounted) {
+    _vm.e0 = function (e) {
+      return (_vm.form.postalCode = e.detail.value)
+    }
+    _vm.e1 = function (e) {
+      return (_vm.form.building = e.detail.value)
+    }
+    _vm.e2 = function (e) {
+      return (_vm.form.detail = e.detail.value)
+    }
+    _vm.e3 = function (e) {
+      return (_vm.form.floor = e.detail.value)
+    }
+    _vm.e4 = function (e) {
+      return (_vm.form.unit = e.detail.value)
+    }
+    _vm.e5 = function (e) {
+      return (_vm.form.name = e.detail.value)
+    }
+    _vm.e6 = function (e) {
+      return (_vm.form.phone = e.detail.value)
+    }
+  }
 }
 var recyclableRender = false
 var staticRenderFns = []
@@ -201,273 +224,273 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 //
 //
 //
+//
+//
+//
+//
+//
 
-// pages/address-edit/address-edit.js
 var app = getApp();
 var api = __webpack_require__(/*! ../../utils/api.js */ 38);
 var _default = {
   data: function data() {
     return {
+      statusBarHeight: 0,
+      isEdit: false,
       addressId: null,
-      name: '',
-      phone: '',
-      province: '',
-      city: '',
-      district: '',
-      detail: '',
-      latitude: null,
-      longitude: null,
-      isDefault: false,
-      // 省市区选择
-      regions: ['请选择', '请选择', '请选择'],
-      isEdit: false
+      form: {
+        postalCode: '',
+        building: '',
+        detail: '',
+        floor: '',
+        unit: '',
+        name: '',
+        phone: '',
+        province: '',
+        city: '',
+        district: '',
+        isDefault: false
+      }
     };
   },
   onLoad: function onLoad(options) {
+    this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
     if (options.id) {
-      this.setData({
-        addressId: options.id,
-        isEdit: true
-      });
+      this.isEdit = true;
+      this.addressId = options.id;
       this.loadAddressDetail(options.id);
     }
   },
   methods: {
-    // 加载地址详情
-    loadAddressDetail: function loadAddressDetail(addressId) {
+    goBack: function goBack() {
+      uni.navigateBack();
+    },
+    loadAddressDetail: function loadAddressDetail(id) {
       var _this = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
-        var addressList, address;
+        var list, addr;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
                 _context.prev = 0;
                 uni.showLoading({
-                  title: '加载中...'
+                  title: 'Loading...'
                 });
                 if (app.globalData.isLogin) {
                   _context.next = 6;
                   break;
                 }
-                addressList = uni.getStorageSync('guestAddresses') || [];
+                list = uni.getStorageSync('guestAddresses') || [];
                 _context.next = 9;
                 break;
               case 6:
                 _context.next = 8;
                 return api.getAddressList();
               case 8:
-                addressList = _context.sent;
+                list = _context.sent;
               case 9:
-                address = addressList.find(function (item) {
-                  return item.id == addressId;
+                addr = list.find(function (a) {
+                  return a.id == id;
                 });
-                if (address) {
-                  _this.setData({
-                    name: address.name,
-                    phone: address.phone,
-                    province: address.province,
-                    city: address.city,
-                    district: address.district,
-                    detail: address.detail,
-                    latitude: address.latitude,
-                    longitude: address.longitude,
-                    isDefault: address.isDefault,
-                    regions: [address.province, address.city, address.district]
-                  });
+                if (addr) {
+                  _this.form = {
+                    postalCode: addr.postalCode || '',
+                    building: addr.building || '',
+                    detail: addr.detail || '',
+                    floor: addr.floor || '',
+                    unit: addr.unit || '',
+                    name: addr.name || '',
+                    phone: addr.phone || '',
+                    province: addr.province || '',
+                    city: addr.city || '',
+                    district: addr.district || '',
+                    isDefault: addr.isDefault || false
+                  };
                 }
-                uni.hideLoading();
-                _context.next = 20;
+                _context.next = 16;
                 break;
-              case 14:
-                _context.prev = 14;
+              case 13:
+                _context.prev = 13;
                 _context.t0 = _context["catch"](0);
-                console.log('CatchClause', _context.t0);
-                console.log('CatchClause', _context.t0);
-                uni.hideLoading();
                 uni.showToast({
-                  title: '加载失败',
+                  title: 'Failed to load',
                   icon: 'none'
                 });
-              case 20:
+              case 16:
+                _context.prev = 16;
+                uni.hideLoading();
+                return _context.finish(16);
+              case 19:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[0, 14]]);
+        }, _callee, null, [[0, 13, 16, 19]]);
       }))();
     },
-    // 输入姓名
-    inputName: function inputName(e) {
-      this.setData({
-        name: e.detail.value
-      });
-    },
-    // 输入电话
-    inputPhone: function inputPhone(e) {
-      this.setData({
-        phone: e.detail.value
-      });
-    },
-    // 输入省
-    inputProvince: function inputProvince(e) {
-      this.setData({
-        province: e.detail.value
-      });
-    },
-    // 输入城市
-    inputCity: function inputCity(e) {
-      this.setData({
-        city: e.detail.value
-      });
-    },
-    // 输入区县
-    inputDistrict: function inputDistrict(e) {
-      this.setData({
-        district: e.detail.value
-      });
-    },
-    // 输入详细地址
-    inputDetail: function inputDetail(e) {
-      this.setData({
-        detail: e.detail.value
-      });
-    },
-    // 切换默认地址
-    toggleDefault: function toggleDefault() {
-      this.setData({
-        isDefault: !this.isDefault
-      });
-    },
-    // 保存地址
     saveAddress: function saveAddress() {
       var _this2 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
-        var addressData, list;
+        var data, list;
         return _regenerator.default.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                if (_this2.name) {
-                  _context2.next = 3;
+                if (_this2.form.name) {
+                  _context2.next = 2;
                   break;
                 }
-                uni.showToast({
-                  title: '请输入收货人姓名',
+                return _context2.abrupt("return", uni.showToast({
+                  title: 'Please enter name',
                   icon: 'none'
-                });
-                return _context2.abrupt("return");
-              case 3:
-                if (_this2.phone) {
+                }));
+              case 2:
+                if (_this2.form.phone) {
+                  _context2.next = 4;
+                  break;
+                }
+                return _context2.abrupt("return", uni.showToast({
+                  title: 'Please enter phone',
+                  icon: 'none'
+                }));
+              case 4:
+                if (_this2.form.detail) {
                   _context2.next = 6;
                   break;
                 }
-                uni.showToast({
-                  title: '请输入手机号',
+                return _context2.abrupt("return", uni.showToast({
+                  title: 'Please enter address',
                   icon: 'none'
-                });
-                return _context2.abrupt("return");
+                }));
               case 6:
-                if (!(!_this2.province || _this2.province === '请选择')) {
-                  _context2.next = 9;
-                  break;
-                }
-                uni.showToast({
-                  title: '请选择省市区',
-                  icon: 'none'
-                });
-                return _context2.abrupt("return");
-              case 9:
-                if (_this2.detail) {
-                  _context2.next = 12;
-                  break;
-                }
-                uni.showToast({
-                  title: '请输入详细地址',
-                  icon: 'none'
-                });
-                return _context2.abrupt("return");
-              case 12:
-                addressData = {
-                  name: _this2.name,
-                  phone: _this2.phone,
-                  province: _this2.province,
-                  city: _this2.city,
-                  district: _this2.district,
-                  detail: _this2.detail,
-                  latitude: _this2.latitude,
-                  longitude: _this2.longitude,
-                  isDefault: _this2.isDefault
-                };
-                _context2.prev = 13;
+                data = _objectSpread({}, _this2.form);
+                _context2.prev = 7;
                 uni.showLoading({
-                  title: '保存中...'
+                  title: 'Saving...'
                 });
                 if (app.globalData.isLogin) {
-                  _context2.next = 21;
+                  _context2.next = 15;
                   break;
                 }
                 list = uni.getStorageSync('guestAddresses') || [];
                 if (_this2.isEdit) {
-                  addressData.id = _this2.addressId;
+                  data.id = _this2.addressId;
                   list = list.map(function (a) {
-                    return a.id == _this2.addressId ? _objectSpread(_objectSpread({}, a), addressData) : a;
+                    return a.id == _this2.addressId ? _objectSpread(_objectSpread({}, a), data) : a;
                   });
                 } else {
-                  addressData.id = Date.now();
-                  if (addressData.isDefault || list.length === 0) {
-                    list = list.map(function (a) {
-                      return _objectSpread(_objectSpread({}, a), {}, {
-                        isDefault: false
-                      });
-                    });
-                    addressData.isDefault = true;
-                  }
-                  list.push(addressData);
+                  data.id = Date.now();
+                  if (list.length === 0) data.isDefault = true;
+                  list.push(data);
                 }
                 uni.setStorageSync('guestAddresses', list);
-                _context2.next = 29;
+                _context2.next = 23;
                 break;
-              case 21:
+              case 15:
                 if (!_this2.isEdit) {
-                  _context2.next = 27;
+                  _context2.next = 21;
                   break;
                 }
-                addressData.id = _this2.addressId;
-                _context2.next = 25;
-                return api.updateAddress(addressData);
-              case 25:
-                _context2.next = 29;
+                data.id = _this2.addressId;
+                _context2.next = 19;
+                return api.updateAddress(data);
+              case 19:
+                _context2.next = 23;
                 break;
-              case 27:
-                _context2.next = 29;
-                return api.addAddress(addressData);
-              case 29:
+              case 21:
+                _context2.next = 23;
+                return api.addAddress(data);
+              case 23:
                 uni.hideLoading();
                 uni.showToast({
-                  title: '保存成功',
+                  title: 'Saved',
                   icon: 'success'
                 });
                 setTimeout(function () {
-                  uni.navigateBack();
-                }, 1500);
-                _context2.next = 38;
+                  return uni.navigateBack();
+                }, 1200);
+                _context2.next = 32;
                 break;
-              case 34:
-                _context2.prev = 34;
-                _context2.t0 = _context2["catch"](13);
+              case 28:
+                _context2.prev = 28;
+                _context2.t0 = _context2["catch"](7);
                 uni.hideLoading();
                 uni.showToast({
-                  title: '保存失败',
+                  title: 'Save failed',
                   icon: 'none'
                 });
-              case 38:
+              case 32:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2, null, [[13, 34]]);
+        }, _callee2, null, [[7, 28]]);
       }))();
+    },
+    deleteAddress: function deleteAddress() {
+      var _this3 = this;
+      uni.showModal({
+        title: 'Delete Address',
+        content: 'Are you sure?',
+        success: function () {
+          var _success = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3(res) {
+            var list;
+            return _regenerator.default.wrap(function _callee3$(_context3) {
+              while (1) {
+                switch (_context3.prev = _context3.next) {
+                  case 0:
+                    if (res.confirm) {
+                      _context3.next = 2;
+                      break;
+                    }
+                    return _context3.abrupt("return");
+                  case 2:
+                    _context3.prev = 2;
+                    if (app.globalData.isLogin) {
+                      _context3.next = 9;
+                      break;
+                    }
+                    list = uni.getStorageSync('guestAddresses') || [];
+                    list = list.filter(function (a) {
+                      return a.id != _this3.addressId;
+                    });
+                    uni.setStorageSync('guestAddresses', list);
+                    _context3.next = 11;
+                    break;
+                  case 9:
+                    _context3.next = 11;
+                    return api.deleteAddress(_this3.addressId);
+                  case 11:
+                    uni.showToast({
+                      title: 'Deleted',
+                      icon: 'success'
+                    });
+                    setTimeout(function () {
+                      return uni.navigateBack();
+                    }, 1200);
+                    _context3.next = 18;
+                    break;
+                  case 15:
+                    _context3.prev = 15;
+                    _context3.t0 = _context3["catch"](2);
+                    uni.showToast({
+                      title: 'Failed',
+                      icon: 'none'
+                    });
+                  case 18:
+                  case "end":
+                    return _context3.stop();
+                }
+              }
+            }, _callee3, null, [[2, 15]]);
+          }));
+          function success(_x) {
+            return _success.apply(this, arguments);
+          }
+          return success;
+        }()
+      });
     }
   }
 };

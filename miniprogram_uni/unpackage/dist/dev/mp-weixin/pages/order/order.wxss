@@ -643,6 +643,8 @@
 
 
 
+
+
 /* pages/order/order.wxss */
 .order-container {
     background-color: #ffffff;
@@ -891,6 +893,11 @@
     align-items: center;
     z-index: 100;
     box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.1);
+	
+	/* --- 新增以下三行 --- */
+	will-change: transform; 
+	transform: translateZ(0); 
+	-webkit-transform: translateZ(0);
 }
 .cart-info {
     flex: 1;
@@ -1148,12 +1155,11 @@
 }
 .cart-list {
     flex: 1;
-    padding: 0 40rpx;
     max-height: 500rpx;
 }
 .cart-item {
     display: flex;
-    padding: 30rpx 0;
+    padding: 30rpx 40rpx;
     border-bottom: 1rpx solid #f0f0f0;
 }
 .cart-item-image {
@@ -1164,6 +1170,7 @@
 }
 .cart-item-info {
     flex: 1;
+    min-width: 0;
 }
 .cart-item-name {
     font-size: 28rpx;
@@ -1171,6 +1178,9 @@
     color: #333;
     margin-bottom: 8rpx;
     display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .cart-item-specs {
     font-size: 24rpx;

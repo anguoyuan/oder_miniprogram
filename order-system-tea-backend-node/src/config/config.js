@@ -13,14 +13,14 @@ module.exports = {
   
   // 微信配置
   wechat: {
-    appId: 'wx105c7f4184eb6754',
-    appSecret: '088d0c9a3a536cad7501f197a06d60ef'
+    appId: process.env.WX_APP_ID || 'wx5c299618872f77c3',
+    appSecret: process.env.WX_APP_SECRET || '6dde2ce45ba6c624bde73bf634e88750'
   },
-  
+
   // 文件上传配置
   upload: {
     dir: process.env.UPLOAD_DIR || 'uploads',
-    serverUrl: process.env.SERVER_URL || 'http://localhost:8080'
+    serverUrl: process.env.SERVER_URL || 'https://api.liveasy.solutions'
   },
   
   // 店铺配置

@@ -102,7 +102,7 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  var g0 = _vm.addressList.length
+  var g0 = !_vm.loading ? _vm.addressList.length : null
   _vm.$mp.data = Object.assign(
     {},
     {
@@ -189,28 +189,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 
-// pages/address/address.js
 var app = getApp();
 var api = __webpack_require__(/*! ../../utils/api.js */ 38);
 var _default = {
@@ -218,218 +197,124 @@ var _default = {
     return {
       addressList: [],
       loading: false,
-      selectedAddress: '',
-      address: ''
+      statusBarHeight: 0
     };
   },
-  onLoad: function onLoad(options) {
-    this.fromPage = options.from || '';
-    this.loadAddressList();
+  onLoad: function onLoad() {
+    this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
   },
   onShow: function onShow() {
     this.loadAddressList();
   },
   methods: {
-    // 加载地址列表
+    goBack: function goBack() {
+      uni.navigateBack();
+    },
     loadAddressList: function loadAddressList() {
       var _this = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
-        var local, result;
+        var result;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
+                _this.loading = true;
+                _context.prev = 1;
                 if (app.globalData.isLogin) {
-                  _context.next = 4;
+                  _context.next = 5;
                   break;
                 }
-                local = uni.getStorageSync('guestAddresses') || [];
-                _this.setData({
-                  addressList: local
-                });
+                _this.addressList = uni.getStorageSync('guestAddresses') || [];
                 return _context.abrupt("return");
-              case 4:
-                _this.setData({
-                  loading: true
-                });
-                _context.prev = 5;
-                _context.next = 8;
+              case 5:
+                _context.next = 7;
                 return api.getAddressList();
-              case 8:
+              case 7:
                 result = _context.sent;
-                _this.setData({
-                  addressList: result || []
-                });
-                _context.next = 16;
+                _this.addressList = result || [];
+                _context.next = 14;
                 break;
-              case 12:
-                _context.prev = 12;
-                _context.t0 = _context["catch"](5);
-                console.error('加载地址列表失败', _context.t0);
+              case 11:
+                _context.prev = 11;
+                _context.t0 = _context["catch"](1);
                 uni.showToast({
                   title: '加载失败',
                   icon: 'none'
                 });
-              case 16:
-                _context.prev = 16;
-                _this.setData({
-                  loading: false
-                });
-                return _context.finish(16);
-              case 19:
+              case 14:
+                _context.prev = 14;
+                _this.loading = false;
+                return _context.finish(14);
+              case 17:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[5, 12, 16, 19]]);
+        }, _callee, null, [[1, 11, 14, 17]]);
       }))();
     },
-    // 选择地址（从结算页跳转过来时）
-    selectAddress: function selectAddress(e) {
-      var address = e.currentTarget.dataset.address;
-      if (this.fromPage === 'checkout') {
-        // 将选中的地址传回结算页
-        var pages = getCurrentPages();
-        var prevPage = pages[pages.length - 2];
-        if (prevPage) {
-          prevPage.setData({
-            selectedAddress: address,
-            address: "".concat(address.name, " ").concat(address.phone, " ").concat(address.province).concat(address.city).concat(address.district).concat(address.detail)
-          });
-        }
-        uni.navigateBack();
-      }
+    addAddress: function addAddress() {
+      uni.navigateTo({
+        url: '/pages/address-edit/address-edit'
+      });
     },
-    // 设置默认地址
-    setDefault: function setDefault(e) {
+    editAddress: function editAddress(item) {
+      uni.navigateTo({
+        url: "/pages/address-edit/address-edit?id=".concat(item.id)
+      });
+    },
+    setDefault: function setDefault(id) {
       var _this2 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
-        var addressId, list;
+        var item, list;
         return _regenerator.default.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                addressId = e.currentTarget.dataset.id;
+                item = _this2.addressList.find(function (a) {
+                  return a.id == id;
+                });
+                if (!(item && item.isDefault)) {
+                  _context2.next = 3;
+                  break;
+                }
+                return _context2.abrupt("return");
+              case 3:
                 if (app.globalData.isLogin) {
-                  _context2.next = 7;
+                  _context2.next = 9;
                   break;
                 }
                 list = uni.getStorageSync('guestAddresses') || [];
                 list = list.map(function (a) {
                   return _objectSpread(_objectSpread({}, a), {}, {
-                    isDefault: a.id == addressId
+                    isDefault: a.id == id
                   });
                 });
                 uni.setStorageSync('guestAddresses', list);
-                _this2.setData({
-                  addressList: list
-                });
+                _this2.addressList = list;
                 return _context2.abrupt("return");
-              case 7:
-                _context2.prev = 7;
-                _context2.next = 10;
-                return api.setDefaultAddress(addressId);
-              case 10:
-                uni.showToast({
-                  title: '设置成功',
-                  icon: 'success'
-                });
+              case 9:
+                _context2.prev = 9;
+                _context2.next = 12;
+                return api.setDefaultAddress(id);
+              case 12:
                 _this2.loadAddressList();
-                _context2.next = 17;
+                _context2.next = 18;
                 break;
-              case 14:
-                _context2.prev = 14;
-                _context2.t0 = _context2["catch"](7);
+              case 15:
+                _context2.prev = 15;
+                _context2.t0 = _context2["catch"](9);
                 uni.showToast({
                   title: '设置失败',
                   icon: 'none'
                 });
-              case 17:
+              case 18:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2, null, [[7, 14]]);
+        }, _callee2, null, [[9, 15]]);
       }))();
-    },
-    // 编辑地址
-    editAddress: function editAddress(e) {
-      var address = e.currentTarget.dataset.address;
-      uni.navigateTo({
-        url: "/pages/address-edit/address-edit?id=".concat(address.id)
-      });
-    },
-    // 删除地址
-    deleteAddress: function deleteAddress(e) {
-      var _this3 = this;
-      var addressId = e.currentTarget.dataset.id;
-      uni.showModal({
-        title: '确认删除',
-        content: '确定要删除这个地址吗？',
-        success: function () {
-          var _success = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3(res) {
-            var list;
-            return _regenerator.default.wrap(function _callee3$(_context3) {
-              while (1) {
-                switch (_context3.prev = _context3.next) {
-                  case 0:
-                    if (res.confirm) {
-                      _context3.next = 2;
-                      break;
-                    }
-                    return _context3.abrupt("return");
-                  case 2:
-                    if (app.globalData.isLogin) {
-                      _context3.next = 8;
-                      break;
-                    }
-                    list = uni.getStorageSync('guestAddresses') || [];
-                    list = list.filter(function (a) {
-                      return a.id != addressId;
-                    });
-                    uni.setStorageSync('guestAddresses', list);
-                    _this3.setData({
-                      addressList: list
-                    });
-                    return _context3.abrupt("return");
-                  case 8:
-                    _context3.prev = 8;
-                    _context3.next = 11;
-                    return api.deleteAddress(addressId);
-                  case 11:
-                    uni.showToast({
-                      title: '删除成功',
-                      icon: 'success'
-                    });
-                    _this3.loadAddressList();
-                    _context3.next = 18;
-                    break;
-                  case 15:
-                    _context3.prev = 15;
-                    _context3.t0 = _context3["catch"](8);
-                    uni.showToast({
-                      title: '删除失败',
-                      icon: 'none'
-                    });
-                  case 18:
-                  case "end":
-                    return _context3.stop();
-                }
-              }
-            }, _callee3, null, [[8, 15]]);
-          }));
-          function success(_x) {
-            return _success.apply(this, arguments);
-          }
-          return success;
-        }()
-      });
-    },
-    // 添加地址
-    addAddress: function addAddress() {
-      uni.navigateTo({
-        url: '/pages/address-edit/address-edit'
-      });
     }
   }
 };

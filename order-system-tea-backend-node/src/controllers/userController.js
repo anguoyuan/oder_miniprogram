@@ -32,7 +32,10 @@ class UserController {
         user = await UserModel.findById(userId);
       } else if (nickname || avatar) {
         // 更新用户信息
-        // await UserModel.update(user.id, { nickname, avatar });
+        await UserModel.update(user.id, {
+          ...(nickname && { nickname }),
+          ...(avatar && { avatar })
+        });
         user = await UserModel.findById(user.id);
       }
       

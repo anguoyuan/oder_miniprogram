@@ -358,14 +358,19 @@
 }
 .item-info {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 .item-name {
     font-size: 30rpx;
     font-weight: bold;
     color: #333;
     margin-bottom: 10rpx;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .item-specs {
     font-size: 24rpx;

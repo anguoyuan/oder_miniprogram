@@ -137,7 +137,10 @@ class OrderModel {
     // 为每个订单查询订单明细
     const orders = await Promise.all(rows.map(async (order) => {
       const [items] = await pool.execute(
-        'SELECT * FROM order_item WHERE order_id = ?',
+        `SELECT oi.*, p.description as product_description
+         FROM order_item oi
+         LEFT JOIN product p ON oi.product_id = p.id
+         WHERE oi.order_id = ?`,
         [order.id]
       );
       return {
@@ -182,7 +185,7 @@ class OrderModel {
 
     const orders = await Promise.all(rows.map(async (order) => {
       const [items] = await pool.execute(
-        `SELECT oi.*, p.description as productDescription
+        `SELECT oi.*, p.description as product_description
          FROM order_item oi
          LEFT JOIN product p ON oi.product_id = p.id
          WHERE oi.order_id = ?`,

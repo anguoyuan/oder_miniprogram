@@ -143,7 +143,46 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 34));
+var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
 var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 36));
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -232,9 +271,12 @@ var _default = {
       isLogin: false,
       userInfo: null,
       orderCount: 0,
-      totalSpent: '0.00',
-      likeCount: 0,
-      statusBarHeight: 0
+      totalSpent: 0,
+      statusBarHeight: 0,
+      showProfileSetup: false,
+      tempAvatar: '',
+      tempNickname: '',
+      loginCode: ''
     };
   },
   onLoad: function onLoad() {
@@ -248,18 +290,16 @@ var _default = {
     }
   },
   methods: {
-    // 检查登录状态
     checkLoginStatus: function checkLoginStatus() {
       this.setData({
         isLogin: app.globalData.isLogin,
         userInfo: app.globalData.userInfo
       });
     },
-    // 加载用户统计数据
     loadUserStats: function loadUserStats() {
       var _this = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
-        var result, orders, orderCount, totalSpent;
+        var result, orders, paidOrders, orderCount, nongCoins;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -273,136 +313,208 @@ var _default = {
               case 3:
                 result = _context.sent;
                 orders = result.records || [];
-                orderCount = orders.length; // 计算累计消费（只统计已完成的订单）
-                totalSpent = orders.filter(function (o) {
-                  return o.status === 'completed';
-                }).reduce(function (total, order) {
-                  return total + parseFloat(order.totalPrice || 0);
-                }, 0).toFixed(2);
+                paidOrders = orders.filter(function (o) {
+                  return o.paymentStatus === 'paid';
+                });
+                orderCount = paidOrders.length;
+                nongCoins = Math.floor(paidOrders.reduce(function (total, order) {
+                  var price = parseFloat(order.totalPrice || 0);
+                  var coins;
+                  if (price < 60) coins = price * 1;else if (price <= 100) coins = price * 1.5;else coins = price * 2;
+                  return total + coins;
+                }, 0));
                 _this.setData({
                   orderCount: orderCount,
-                  totalSpent: totalSpent
+                  totalSpent: nongCoins
                 });
-                _context.next = 16;
+                _context.next = 15;
                 break;
-              case 10:
-                _context.prev = 10;
+              case 11:
+                _context.prev = 11;
                 _context.t0 = _context["catch"](0);
-                console.log('CatchClause', _context.t0);
-                console.log('CatchClause', _context.t0);
                 console.error('加载用户统计失败', _context.t0);
                 _this.setData({
                   orderCount: 0,
-                  totalSpent: '0.00'
+                  totalSpent: 0
                 });
-              case 16:
+              case 15:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[0, 10]]);
+        }, _callee, null, [[0, 11]]);
       }))();
     },
-    // 处理登录
+    handleAvatarTap: function handleAvatarTap() {
+      if (!this.isLogin) {
+        this.handleLogin();
+      }
+    },
     handleLogin: function handleLogin() {
-      var that = this;
-      uni.getUserProfile({
-        desc: '用于完善用户资料',
-        success: function success(res) {
-          // 获取微信登录code
-          uni.login({
-            success: function () {
-              var _success = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2(loginRes) {
-                var result;
-                return _regenerator.default.wrap(function _callee2$(_context2) {
-                  while (1) {
-                    switch (_context2.prev = _context2.next) {
-                      case 0:
-                        _context2.prev = 0;
-                        uni.showLoading({
-                          title: '登录中...'
-                        });
-
-                        // 调用后端登录接口
-                        _context2.next = 4;
-                        return api.wxLogin({
-                          code: loginRes.code,
-                          nickname: res.userInfo.nickname,
-                          avatar: res.userInfo.avatarUrl
-                        });
-                      case 4:
-                        result = _context2.sent;
-                        uni.hideLoading();
-
-                        // 保存token和用户信息
-                        uni.setStorageSync('token', result.token);
-                        uni.setStorageSync('userInfo', result.user);
-                        app.globalData.isLogin = true;
-                        app.globalData.userInfo = result.user;
-                        that.setData({
-                          isLogin: true,
-                          userInfo: result.user
-                        });
-                        that.loadUserStats();
-                        uni.showToast({
-                          title: '登录成功',
-                          icon: 'success'
-                        });
-                        _context2.next = 22;
-                        break;
-                      case 15:
-                        _context2.prev = 15;
-                        _context2.t0 = _context2["catch"](0);
-                        console.log('CatchClause', _context2.t0);
-                        console.log('CatchClause', _context2.t0);
-                        uni.hideLoading();
-                        console.error('登录失败', _context2.t0);
-                        uni.showToast({
-                          title: '登录失败',
-                          icon: 'none'
-                        });
-                      case 22:
-                      case "end":
-                        return _context2.stop();
-                    }
-                  }
-                }, _callee2, null, [[0, 15]]);
-              }));
-              function success(_x) {
-                return _success.apply(this, arguments);
-              }
-              return success;
-            }(),
-            fail: function fail() {
-              uni.showToast({
-                title: '获取登录凭证失败',
-                icon: 'none'
-              });
-            }
+      var _this2 = this;
+      uni.login({
+        success: function success(loginRes) {
+          _this2.setData({
+            loginCode: loginRes.code,
+            tempAvatar: '',
+            tempNickname: '',
+            showProfileSetup: true
           });
         },
         fail: function fail() {
           uni.showToast({
-            title: '取消登录',
+            title: '获取登录凭证失败',
             icon: 'none'
           });
         }
       });
     },
-    // 处理登出
+    handleChooseAvatar: function handleChooseAvatar(e) {
+      this.setData({
+        tempAvatar: e.detail.avatarUrl
+      });
+    },
+    handleNicknameChange: function handleNicknameChange(e) {
+      this.setData({
+        tempNickname: e.detail.value
+      });
+    },
+    handleNicknameInput: function handleNicknameInput(e) {
+      this.setData({
+        tempNickname: e.detail.value
+      });
+    },
+    handleNicknameBlur: function handleNicknameBlur(e) {
+      this.setData({
+        tempNickname: e.detail.value
+      });
+    },
+    confirmProfile: function confirmProfile() {
+      var _this3 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
+        var avatarUrl, result, userInfo;
+        return _regenerator.default.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                if (_this3.tempNickname.trim()) {
+                  _context2.next = 3;
+                  break;
+                }
+                uni.showToast({
+                  title: '请输入昵称',
+                  icon: 'none'
+                });
+                return _context2.abrupt("return");
+              case 3:
+                _context2.prev = 3;
+                uni.showLoading({
+                  title: '登录中...'
+                });
+
+                // 先上传头像，获取永久URL
+                avatarUrl = '';
+                if (!_this3.tempAvatar) {
+                  _context2.next = 10;
+                  break;
+                }
+                _context2.next = 9;
+                return _this3.uploadAvatar(_this3.tempAvatar);
+              case 9:
+                avatarUrl = _context2.sent;
+              case 10:
+                _context2.next = 12;
+                return api.wxLogin({
+                  code: _this3.loginCode,
+                  nickname: _this3.tempNickname,
+                  avatar: avatarUrl
+                });
+              case 12:
+                result = _context2.sent;
+                uni.hideLoading();
+                userInfo = _objectSpread(_objectSpread({}, result.user), {}, {
+                  nickname: _this3.tempNickname,
+                  avatar: avatarUrl || result.user.avatar
+                });
+                uni.setStorageSync('token', result.token);
+                uni.setStorageSync('userInfo', userInfo);
+                app.globalData.isLogin = true;
+                app.globalData.userInfo = userInfo;
+                _this3.setData({
+                  isLogin: true,
+                  userInfo: userInfo,
+                  showProfileSetup: false
+                });
+                _this3.loadUserStats();
+                uni.showToast({
+                  title: '登录成功',
+                  icon: 'success'
+                });
+                _context2.next = 29;
+                break;
+              case 24:
+                _context2.prev = 24;
+                _context2.t0 = _context2["catch"](3);
+                uni.hideLoading();
+                console.error('登录失败', _context2.t0);
+                uni.showToast({
+                  title: '登录失败',
+                  icon: 'none'
+                });
+              case 29:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, null, [[3, 24]]);
+      }))();
+    },
+    uploadAvatar: function uploadAvatar(filePath) {
+      var config = __webpack_require__(/*! ../../config.js */ 37);
+      return new Promise(function (resolve, reject) {
+        uni.uploadFile({
+          url: config.apiUrl + '/file/upload',
+          filePath: filePath,
+          name: 'file',
+          header: {
+            Authorization: uni.getStorageSync('token') || ''
+          },
+          success: function success(res) {
+            try {
+              var data = JSON.parse(res.data);
+              if (data.code === 200) {
+                resolve(data.data.url);
+              } else {
+                resolve('');
+              }
+            } catch (_unused) {
+              resolve('');
+            }
+          },
+          fail: function fail() {
+            return resolve('');
+          }
+        });
+      });
+    },
+    cancelSetup: function cancelSetup() {
+      this.setData({
+        showProfileSetup: false
+      });
+    },
     handleLogout: function handleLogout() {
-      var _this2 = this;
+      var _this4 = this;
       uni.showModal({
         title: '确认退出',
         content: '确定要退出登录吗？',
         success: function success(res) {
           if (res.confirm) {
             app.globalData.logout();
-            _this2.setData({
+            _this4.setData({
               isLogin: false,
               userInfo: null,
               orderCount: 0,
-              totalSpent: '0.00'
+              totalSpent: 0
             });
             uni.showToast({
               title: '已退出登录',
@@ -412,7 +524,6 @@ var _default = {
         }
       });
     },
-    // 跳转到订单页面
     goToOrders: function goToOrders() {
       if (!this.isLogin) {
         uni.showToast({
@@ -425,39 +536,6 @@ var _default = {
         url: '/pages/orderList/orderList'
       });
     },
-    // 跳转到购物车
-    goToCart: function goToCart() {
-      uni.navigateTo({
-        url: '/pages/cart/cart'
-      });
-    },
-    // 跳转到收藏页面
-    goToFavorite: function goToFavorite() {
-      if (!this.isLogin) {
-        uni.showToast({
-          title: '请先登录',
-          icon: 'none'
-        });
-        return;
-      }
-      uni.navigateTo({
-        url: '/pages/favorite/favorite'
-      });
-    },
-    // 跳转到点赞页面
-    goToLikes: function goToLikes() {
-      if (!this.isLogin) {
-        uni.showToast({
-          title: '请先登录',
-          icon: 'none'
-        });
-        return;
-      }
-      uni.navigateTo({
-        url: '/pages/likes/likes'
-      });
-    },
-    // 处理菜单点击
     handleMenuClick: function handleMenuClick(e) {
       var type = e.currentTarget.dataset.type;
       switch (type) {
@@ -472,15 +550,11 @@ var _default = {
         case 'privacy':
           this.showPrivacyModal();
           break;
-        case 'agreement':
-          this.showAgreementModal();
-          break;
         case 'recruitment':
           this.showRecruitmentModal();
           break;
       }
     },
-    // 显示使用须知
     showUsageModal: function showUsageModal() {
       uni.showModal({
         title: '使用须知',
@@ -489,7 +563,6 @@ var _default = {
         confirmText: '我知道了'
       });
     },
-    // 显示隐私条款
     showPrivacyModal: function showPrivacyModal() {
       uni.showModal({
         title: '隐私条款',
@@ -498,7 +571,6 @@ var _default = {
         confirmText: '我知道了'
       });
     },
-    // 显示员工招聘
     showRecruitmentModal: function showRecruitmentModal() {
       uni.showModal({
         title: '员工招聘',

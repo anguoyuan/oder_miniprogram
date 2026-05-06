@@ -47,7 +47,7 @@
 
                                 <view class="product-info">
                                     <text class="product-name">{{ product.productName }}</text>
-                                    <text class="product-specs" v-if="product.specs">{{ product.specs }}</text>
+                                    <text class="product-specs" v-if="product.productDescription">{{ product.productDescription }}</text>
                                     <view class="product-bottom">
                                         <text class="product-price">${{ product.price }}</text>
                                         <text class="product-quantity">x{{ product.quantity }}</text>

@@ -716,9 +716,12 @@ var _default = {
         return;
       }
 
-      // 跳转到结算页面
+      // this.showCartModal = false;
       uni.navigateTo({
-        url: '/pages/checkout/checkout'
+        url: '/pages/checkout/checkout',
+        animationType: 'pop-in',
+        // 显式指定原生推入动画
+        animationDuration: 250
       });
     },
     // 切换点赞

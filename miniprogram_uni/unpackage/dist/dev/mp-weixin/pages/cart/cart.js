@@ -608,10 +608,10 @@ var _default = {
         });
         return;
       }
-
+      var itemsCount = selectedItems.length;
       // 跳转到结算页面
       uni.navigateTo({
-        url: '/pages/checkout/checkout'
+        url: "/pages/checkout/checkout?total=".concat(totalPrice, "&count=").concat(itemsCount)
       });
     },
     // 去购物

@@ -378,6 +378,40 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 // pages/checkout/checkout.js
 var app = getApp();
@@ -388,12 +422,12 @@ var _default = {
       selectedItems: [],
       totalPrice: 0,
       deliveryType: 'delivery',
-      // delivery: 外卖, pickup: 自取
       remark: '',
       address: '请选择收货地址',
       selectedAddress: null,
       pickupCode: '',
       submitting: false,
+      showPaynowPopup: false,
       paymentMethod: 'wechat',
       deliveryTime: '',
       showTimePicker: false,
@@ -412,7 +446,7 @@ var _default = {
         name: '',
         phone: ''
       },
-      showPaynowPopup: false
+      footerVisible: false
     };
   },
   computed: {
@@ -470,7 +504,7 @@ var _default = {
     this.loadDefaultAddress();
   },
   onShow: function onShow() {
-    // 从地址页面返回时重新加载并验证地址
+    this.footerVisible = true;
     if (this.deliveryType === 'delivery') {
       this.loadDefaultAddress();
     }
@@ -813,7 +847,7 @@ var _default = {
     submitOrder: function submitOrder() {
       var _this5 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee5() {
-        var result, orderData, _result, pickupCode;
+        var result;
         return _regenerator.default.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
@@ -829,11 +863,15 @@ var _default = {
                 return _context5.abrupt("return");
               case 3:
                 if (!(_this5.deliveryType === 'delivery')) {
-                  _context5.next = 24;
+                  _context5.next = 30;
+                  break;
+                }
+                if (!(parseFloat(_this5.totalPrice) >= 65)) {
+                  _context5.next = 10;
                   break;
                 }
                 if (!(!_this5.selectedAddress || _this5.address === '请选择收货地址')) {
-                  _context5.next = 7;
+                  _context5.next = 8;
                   break;
                 }
                 uni.showModal({
@@ -847,18 +885,31 @@ var _default = {
                   }
                 });
                 return _context5.abrupt("return");
-              case 7:
-                if (!(_this5.selectedAddress.latitude && _this5.selectedAddress.longitude)) {
-                  _context5.next = 24;
+              case 8:
+                _context5.next = 13;
+                break;
+              case 10:
+                if (!(!_this5.mrtStation || !_this5.mrtStation.trim())) {
+                  _context5.next = 13;
                   break;
                 }
-                _context5.prev = 8;
-                _context5.next = 11;
+                uni.showToast({
+                  title: 'Please enter your MRT station',
+                  icon: 'none'
+                });
+                return _context5.abrupt("return");
+              case 13:
+                if (!(_this5.selectedAddress && _this5.selectedAddress.latitude && _this5.selectedAddress.longitude)) {
+                  _context5.next = 30;
+                  break;
+                }
+                _context5.prev = 14;
+                _context5.next = 17;
                 return api.checkDeliveryRange(_this5.selectedAddress.latitude, _this5.selectedAddress.longitude);
-              case 11:
+              case 17:
                 result = _context5.sent;
                 if (result.inRange) {
-                  _context5.next = 15;
+                  _context5.next = 21;
                   break;
                 }
                 uni.showModal({
@@ -867,12 +918,12 @@ var _default = {
                   showCancel: false
                 });
                 return _context5.abrupt("return");
-              case 15:
-                _context5.next = 24;
+              case 21:
+                _context5.next = 30;
                 break;
-              case 17:
-                _context5.prev = 17;
-                _context5.t0 = _context5["catch"](8);
+              case 23:
+                _context5.prev = 23;
+                _context5.t0 = _context5["catch"](14);
                 console.log('CatchClause', _context5.t0);
                 console.log('CatchClause', _context5.t0);
                 console.error('验证配送范围失败', _context5.t0);
@@ -881,53 +932,71 @@ var _default = {
                   icon: 'none'
                 });
                 return _context5.abrupt("return");
-              case 24:
+              case 30:
                 if (!(_this5.paymentMethod === 'paynow')) {
-                  _context5.next = 27;
+                  _context5.next = 33;
                   break;
                 }
-                _this5.setData({ showPaynowPopup: true });
+                _this5.setData({
+                  showPaynowPopup: true
+                });
                 return _context5.abrupt("return");
-              case 27:
-                _this5.doSubmitOrder();
-              case 28:
+              case 33:
+                _context5.next = 35;
+                return _this5.doSubmitOrder();
+              case 35:
               case "end":
                 return _context5.stop();
             }
           }
-        }, _callee5, null, [[8, 17]]);
+        }, _callee5, null, [[14, 23]]);
       }))();
     },
-    // 关闭 PayNow 弹窗
     closePaynowPopup: function closePaynowPopup() {
-      this.setData({ showPaynowPopup: false });
+      this.setData({
+        showPaynowPopup: false
+      });
     },
-    // PayNow 弹窗确认
     confirmPaynowOrder: function confirmPaynowOrder() {
-      this.setData({ showPaynowPopup: false });
-      this.doSubmitOrder();
-    },
-    // 实际提交订单
-    doSubmitOrder: function doSubmitOrder() {
       var _this6 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee6() {
-        var orderData, _result, pickupCode;
         return _regenerator.default.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
               case 0:
                 _this6.setData({
+                  showPaynowPopup: false
+                });
+                _context6.next = 3;
+                return _this6.doSubmitOrder();
+              case 3:
+              case "end":
+                return _context6.stop();
+            }
+          }
+        }, _callee6);
+      }))();
+    },
+    doSubmitOrder: function doSubmitOrder() {
+      var _this7 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee7() {
+        var orderData, result, pickupCode;
+        return _regenerator.default.wrap(function _callee7$(_context7) {
+          while (1) {
+            switch (_context7.prev = _context7.next) {
+              case 0:
+                _this7.setData({
                   submitting: true
                 });
-                _context6.prev = 1;
+                _context7.prev = 1;
                 orderData = {
-                  guestId: app.globalData.guestId,
-                  orderType: _this6.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
-                  address: _this6.deliveryType === 'delivery' ? _this6.address : '到店自取',
-                  addressId: _this6.deliveryType === 'delivery' && _this6.selectedAddress ? _this6.selectedAddress.id : null,
-                  phone: _this6.deliveryType === 'delivery' && _this6.selectedAddress ? _this6.selectedAddress.phone : '',
-                  remark: _this6.remark,
-                  items: _this6.selectedItems.map(function (item) {
+                  guestId: app.globalData.isLogin ? undefined : app.globalData.guestId,
+                  orderType: _this7.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
+                  address: _this7.deliveryType === 'delivery' ? _this7.address : '到店自取',
+                  addressId: _this7.deliveryType === 'delivery' && _this7.selectedAddress ? _this7.selectedAddress.id : null,
+                  phone: _this7.deliveryType === 'delivery' && _this7.selectedAddress ? _this7.selectedAddress.phone : '',
+                  remark: _this7.remark,
+                  items: _this7.selectedItems.map(function (item) {
                     return {
                       productId: item.id,
                       quantity: item.quantity,
@@ -935,58 +1004,64 @@ var _default = {
                     };
                   })
                 };
-                _context6.next = 5;
+                _context7.next = 5;
                 return api.createOrder(orderData);
               case 5:
-                _result = _context6.sent;
-                if (_this6.deliveryType === 'pickup') {
-                  pickupCode = _this6.generatePickupCode();
-                  _this6.setData({
+                result = _context7.sent;
+                // 如果是自取订单，生成取餐码
+                if (_this7.deliveryType === 'pickup') {
+                  pickupCode = _this7.generatePickupCode();
+                  _this7.setData({
                     pickupCode: pickupCode
                   });
+
+                  // 显示取餐码弹窗
                   uni.showModal({
                     title: '下单成功',
                     content: "\u60A8\u7684\u53D6\u9910\u7801\u662F\uFF1A".concat(pickupCode, "\n\u8BF7\u51ED\u6B64\u7801\u5230\u5E97\u53D6\u9910"),
                     showCancel: false,
                     success: function success() {
-                      _this6.navigateToOrderList();
+                      _this7.navigateToOrderList();
                     }
                   });
                 } else {
+                  // 外卖订单直接跳转
                   uni.showToast({
-                    title: '订单已创建，待确认付款',
+                    title: '下单成功',
                     icon: 'success',
                     duration: 2000
                   });
                   setTimeout(function () {
-                    _this6.navigateToOrderList();
+                    _this7.navigateToOrderList();
                   }, 2000);
                 }
+
+                // 清空购物车
                 app.globalData.clearCart();
-                _context6.next = 16;
+                _context7.next = 16;
                 break;
               case 10:
-                _context6.prev = 10;
-                _context6.t0 = _context6["catch"](1);
-                console.log('CatchClause', _context6.t0);
-                console.log('CatchClause', _context6.t0);
-                console.error('提交订单失败', _context6.t0);
+                _context7.prev = 10;
+                _context7.t0 = _context7["catch"](1);
+                console.log('CatchClause', _context7.t0);
+                console.log('CatchClause', _context7.t0);
+                console.error('提交订单失败', _context7.t0);
                 uni.showToast({
                   title: '下单失败',
                   icon: 'none'
                 });
               case 16:
-                _context6.prev = 16;
-                _this6.setData({
+                _context7.prev = 16;
+                _this7.setData({
                   submitting: false
                 });
-                return _context6.finish(16);
+                return _context7.finish(16);
               case 19:
               case "end":
-                return _context6.stop();
+                return _context7.stop();
             }
           }
-        }, _callee6, null, [[1, 10, 16, 19]]);
+        }, _callee7, null, [[1, 10, 16, 19]]);
       }))();
     },
     // 生成取餐码（6位数字）
