@@ -12,50 +12,79 @@ class OrderModel {
   
   /**
    * 创建订单
+   *
+   * 红包/去重：若 5 分钟内已有 unpaid 订单 total_price 与本单相同，自动减 0.10
+   * 直至无冲突；最多减 RED_PACKET_MAX_STEPS 次。到达上限仍冲突则抛
+   * REDUCTION_CAP_EXCEEDED，由 controller 转成"系统繁忙"提示。整个过程在事务里
+   * 并 SELECT ... FOR UPDATE，避免并发同金额订单同时拿到相同折扣。
    */
   static async create(order) {
     const orderNo = this.generateOrderNo();
-    
-    // 检查是否有 address_id 字段
-    let sql, params;
-    const hasAddressId = order.addressId !== undefined && order.addressId !== null;
-    
-    if (hasAddressId) {
-      sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, payment_status, remark, address, phone, address_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-      params = [
+    const RED_PACKET_MAX_STEPS = 20;
+    const STEP_CENTS = 10;
+    const originalCents = Math.round(parseFloat(order.totalPrice) * 100);
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      let candidateCents = originalCents;
+      for (let i = 0; i <= RED_PACKET_MAX_STEPS; i++) {
+        const [rows] = await conn.execute(
+          `SELECT id FROM orders
+             WHERE payment_status = 'unpaid'
+               AND ROUND(total_price * 100) = ?
+               AND create_time >= NOW() - INTERVAL 5 MINUTE
+             FOR UPDATE`,
+          [candidateCents]
+        );
+        if (rows.length === 0) break;
+        if (i === RED_PACKET_MAX_STEPS) {
+          await conn.rollback();
+          const err = new Error('REDUCTION_CAP_EXCEEDED');
+          err.code = 'REDUCTION_CAP_EXCEEDED';
+          throw err;
+        }
+        candidateCents -= STEP_CENTS;
+      }
+      const adjustedPrice = (candidateCents / 100).toFixed(2);
+
+      let sql, params;
+      const hasAddressId = order.addressId !== undefined && order.addressId !== null;
+      if (hasAddressId) {
+        sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, payment_status, remark, address, phone, address_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        params = [
+          orderNo, order.userId, adjustedPrice, order.orderType || 'takeaway',
+          'pending', 'unpaid', order.remark || null, order.address || null,
+          order.phone || null, order.addressId
+        ];
+      } else {
+        sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, payment_status, remark, address, phone)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        params = [
+          orderNo, order.userId, adjustedPrice, order.orderType || 'takeaway',
+          'pending', 'unpaid', order.remark || null, order.address || null,
+          order.phone || null
+        ];
+      }
+
+      const [result] = await conn.execute(sql, params);
+      await conn.commit();
+
+      return {
+        orderId: result.insertId,
         orderNo,
-        order.userId,
-        order.totalPrice,
-        order.orderType || 'takeaway',
-        'pending',
-        'unpaid',
-        order.remark || null,
-        order.address || null,
-        order.phone || null,
-        order.addressId
-      ];
-    } else {
-      sql = `INSERT INTO orders (order_no, user_id, total_price, order_type, status, payment_status, remark, address, phone)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-      params = [
-        orderNo,
-        order.userId,
-        order.totalPrice,
-        order.orderType || 'takeaway',
-        'pending',
-        'unpaid',
-        order.remark || null,
-        order.address || null,
-        order.phone || null
-      ];
+        originalTotalPrice: (originalCents / 100).toFixed(2),
+        adjustedTotalPrice: adjustedPrice,
+        redPacket: ((originalCents - candidateCents) / 100).toFixed(2),
+      };
+    } catch (e) {
+      try { await conn.rollback(); } catch (_) { /* already rolled back */ }
+      throw e;
+    } finally {
+      conn.release();
     }
-    
-    const [result] = await pool.execute(sql, params);
-    return {
-      orderId: result.insertId,
-      orderNo
-    };
   }
   
   /**

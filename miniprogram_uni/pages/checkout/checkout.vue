@@ -204,7 +204,12 @@
                     <!-- 金额 -->
                     <view class="paynow-amount-box">
                         <text class="paynow-amount-label">Amount to pay</text>
-                        <text class="paynow-amount">$ {{ totalPrice }}</text>
+                        <text class="paynow-amount">$ {{ paynowAmount || totalPrice }}</text>
+                    </view>
+
+                    <!-- 红包提示 -->
+                    <view v-if="parseFloat(redPacket) > 0" class="paynow-redpacket-box">
+                        <text class="paynow-redpacket">🧧 店长发了 ¥{{ redPacket }} 随机红包，已自动抵扣应付金额</text>
                     </view>
 
                     <!-- 二维码 -->
@@ -268,7 +273,10 @@ export default {
             addressList: [],
             mrtStation: '',
             newAddr: { postalCode: '', building: '', address: '', floor: '', unit: '', name: '', phone: '' },
-            showPaynowPopup: false
+            showPaynowPopup: false,
+            paynowAmount: 0,      // 服务端去重后实际应付（PayNow 弹窗用）
+            redPacket: '0.00',    // 实际抵扣金额，>0 时弹窗里显示红包提示
+            createdOrder: null    // PayNow 流程下，已创建的订单详情，"I have paid"后用来 finalize
         };
     },
     computed: {
@@ -532,31 +540,25 @@ export default {
                     }
                 }
             }
-            // PayNow: 弹出付款弹窗，不直接提交
-            if (this.paymentMethod === 'paynow') {
-                this.setData({ showPaynowPopup: true });
-                return;
-            }
-
+            // 不论 WeChat 还是 PayNow，都先创建订单（这样 PayNow 弹窗能显示去重后的实际应付金额）
             this.doSubmitOrder();
         },
 
-        // 关闭 PayNow 弹窗
+        // 关闭 PayNow 弹窗：订单已经创建在 unpaid 状态，用户自己决定何时付款 / 离开
         closePaynowPopup() {
             this.setData({ showPaynowPopup: false });
         },
 
-        // PayNow 弹窗点击"I have paid"
+        // PayNow 弹窗点击"I have paid" —— 只走收尾，不再 POST
         confirmPaynowOrder() {
             this.setData({ showPaynowPopup: false });
-            this.doSubmitOrder();
+            this.finalizeAfterOrder();
         },
 
-        // 实际提交订单逻辑
+        // 实际提交订单：调用后端创建。PayNow 路径在创建后弹出付款窗，等用户点"I have paid"再 finalize；
+        // WeChat 路径直接 finalize。
         async doSubmitOrder() {
-            this.setData({
-                submitting: true
-            });
+            this.setData({ submitting: true });
             try {
                 const orderData = {
                     guestId: app.globalData.guestId,
@@ -572,49 +574,51 @@ export default {
                     }))
                 };
                 const result = await api.createOrder(orderData);
+                // result 就是后端返回的 enrichedOrder（含 totalPrice/originalTotalPrice/redPacket，camelCase）
+                this.setData({ createdOrder: result });
 
-                // 如果是自取订单，生成取餐码
+                if (this.paymentMethod === 'paynow') {
+                    // 弹出付款窗，显示后端去重后的实际应付金额 + 红包提示
+                    this.setData({
+                        paynowAmount: result.totalPrice,
+                        redPacket: result.redPacket || '0.00',
+                        showPaynowPopup: true,
+                        submitting: false
+                    });
+                    return;
+                }
+                // WeChat 路径：直接收尾
+                this.finalizeAfterOrder();
+            } catch (err) {
+                // request.js 已经吐了服务端 message 的 toast（含"系统繁忙"），这里不重复打 toast
+                console.error('提交订单失败', err);
+                this.setData({ submitting: false });
+            }
+        },
+
+        // 订单已创建后的 UI 收尾：取餐码/外卖提示，清购物车，跳订单列表
+        finalizeAfterOrder() {
+            try {
                 if (this.deliveryType === 'pickup') {
                     const pickupCode = this.generatePickupCode();
-                    this.setData({
-                        pickupCode: pickupCode
-                    });
-
-                    // 显示取餐码弹窗
+                    this.setData({ pickupCode });
                     uni.showModal({
                         title: '下单成功',
                         content: `您的取餐码是：${pickupCode}\n请凭此码到店取餐`,
                         showCancel: false,
-                        success: () => {
-                            this.navigateToOrderList();
-                        }
+                        success: () => { this.navigateToOrderList(); }
                     });
                 } else {
-                    // 外卖订单直接跳转
                     uni.showToast({
                         title: '订单已创建，待确认付款',
                         icon: 'success',
                         duration: 2000
                     });
-                    setTimeout(() => {
-                        this.navigateToOrderList();
-                    }, 2000);
+                    setTimeout(() => { this.navigateToOrderList(); }, 2000);
                 }
-
-                // 清空购物车
                 app.globalData.clearCart();
-            } catch (error) {
-                console.log('CatchClause', error);
-                console.log('CatchClause', error);
-                console.error('提交订单失败', error);
-                uni.showToast({
-                    title: '下单失败',
-                    icon: 'none'
-                });
             } finally {
-                this.setData({
-                    submitting: false
-                });
+                this.setData({ submitting: false });
             }
         },
 

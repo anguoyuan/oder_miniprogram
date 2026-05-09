@@ -45,48 +45,60 @@ class OrderController {
       // 使用计算出的总价（如果前端传了totalPrice，优先使用前端的）
       const finalTotalPrice = totalPrice || calculatedTotalPrice;
       
-      // 创建订单
-      const { orderId, orderNo } = await OrderModel.create({
-        userId,
-        totalPrice: finalTotalPrice,
-        orderType: orderType || 'takeaway',
-        remark: remark || null,
-        address: address || null,
-        phone: phone || null
-      });
-      
+      // 创建订单（含红包/去重逻辑）
+      let createResult;
+      try {
+        createResult = await OrderModel.create({
+          userId,
+          totalPrice: finalTotalPrice,
+          orderType: orderType || 'takeaway',
+          remark: remark || null,
+          address: address || null,
+          phone: phone || null
+        });
+      } catch (e) {
+        if (e && e.code === 'REDUCTION_CAP_EXCEEDED') {
+          return res.json(error('很抱歉，当前订单量过多，系统繁忙，请稍等一分钟后再试。'));
+        }
+        throw e;
+      }
+      const { orderId, orderNo, originalTotalPrice, redPacket } = createResult;
+
       // 创建订单明细
       await OrderModel.createOrderItems(orderId, enrichedItems);
-      
+
       // 更新商品销量和库存
       for (const item of enrichedItems) {
         await ProductModel.incrementSales(item.productId, item.quantity);
-        // 如果商品有库存字段，减少库存（可选）
-        // await ProductModel.decrementStock(item.productId, item.quantity);
       }
-      
-      // 获取完整订单信息
+
+      // 获取完整订单信息，并附加红包字段供付款页显示
       const order = await OrderModel.getDetail(orderId);
-      
+      const enrichedOrder = {
+        ...order,
+        original_total_price: originalTotalPrice,
+        red_packet: redPacket,
+      };
+
       // 通过Socket.IO通知（新架构）
       if (req.app.locals.io) {
-        req.app.locals.io.emit('newOrder', order);
+        req.app.locals.io.emit('newOrder', enrichedOrder);
       }
-      
+
       // 通过原生WebSocket通知（旧前端）
       if (req.app.locals.wsClients) {
         const message = JSON.stringify({
           type: 'new_order',
-          data: order
+          data: enrichedOrder
         });
         req.app.locals.wsClients.forEach(client => {
-          if (client.readyState === 1) { // WebSocket.OPEN
+          if (client.readyState === 1) {
             client.send(message);
           }
         });
       }
-      
-      res.json(success(order, '订单创建成功'));
+
+      res.json(success(enrichedOrder, '订单创建成功'));
     } catch (err) {
       console.error('创建订单失败:', err);
       res.json(error(err.message || '创建订单失败'));

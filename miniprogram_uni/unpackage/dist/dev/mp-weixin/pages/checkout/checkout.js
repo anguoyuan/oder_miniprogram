@@ -412,7 +412,10 @@ var _default = {
         name: '',
         phone: ''
       },
-      showPaynowPopup: false
+      showPaynowPopup: false,
+      paynowAmount: 0,
+      redPacket: '0.00',
+      createdOrder: null
     };
   },
   computed: {
@@ -809,185 +812,113 @@ var _default = {
         remark: e.detail.value
       });
     },
-    // 提交订单
+    // 提交订单（重写为 Promise 链版本）
     submitOrder: function submitOrder() {
-      var _this5 = this;
-      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee5() {
-        var result, orderData, _result, pickupCode;
-        return _regenerator.default.wrap(function _callee5$(_context5) {
-          while (1) {
-            switch (_context5.prev = _context5.next) {
-              case 0:
-                if (!(_this5.selectedItems.length === 0)) {
-                  _context5.next = 3;
-                  break;
-                }
-                uni.showToast({
-                  title: '请选择商品',
-                  icon: 'none'
-                });
-                return _context5.abrupt("return");
-              case 3:
-                if (!(_this5.deliveryType === 'delivery')) {
-                  _context5.next = 24;
-                  break;
-                }
-                if (!(!_this5.selectedAddress || _this5.address === '请选择收货地址')) {
-                  _context5.next = 7;
-                  break;
-                }
-                uni.showModal({
-                  title: '提示',
-                  content: '外卖配送需要选择收货地址',
-                  confirmText: '去选择',
-                  success: function success(res) {
-                    if (res.confirm) {
-                      _this5.selectAddress();
-                    }
-                  }
-                });
-                return _context5.abrupt("return");
-              case 7:
-                if (!(_this5.selectedAddress.latitude && _this5.selectedAddress.longitude)) {
-                  _context5.next = 24;
-                  break;
-                }
-                _context5.prev = 8;
-                _context5.next = 11;
-                return api.checkDeliveryRange(_this5.selectedAddress.latitude, _this5.selectedAddress.longitude);
-              case 11:
-                result = _context5.sent;
-                if (result.inRange) {
-                  _context5.next = 15;
-                  break;
-                }
+      var self = this;
+      if (self.selectedItems.length === 0) {
+        uni.showToast({ title: '请选择商品', icon: 'none' });
+        return;
+      }
+      if (self.deliveryType === 'delivery') {
+        if (!self.selectedAddress || self.address === '请选择收货地址') {
+          uni.showModal({
+            title: '提示',
+            content: '外卖配送需要选择收货地址',
+            confirmText: '去选择',
+            success: function (res) { if (res.confirm) { self.selectAddress(); } }
+          });
+          return;
+        }
+        if (self.selectedAddress.latitude && self.selectedAddress.longitude) {
+          api.checkDeliveryRange(self.selectedAddress.latitude, self.selectedAddress.longitude)
+            .then(function (result) {
+              if (!result.inRange) {
                 uni.showModal({
                   title: '配送范围提示',
-                  content: "\u5F53\u524D\u5730\u5740\u8DDD\u79BB\u5E97\u94FA".concat(result.distanceText, "\uFF0C\u8D85\u51FA\u914D\u9001\u8303\u56F4\uFF08").concat(result.maxDistance, "\u516C\u91CC\uFF09\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u5730\u5740"),
+                  content: '当前地址距离店铺' + result.distanceText + '，超出配送范围（' + result.maxDistance + '公里），请重新选择地址',
                   showCancel: false
                 });
-                return _context5.abrupt("return");
-              case 15:
-                _context5.next = 24;
-                break;
-              case 17:
-                _context5.prev = 17;
-                _context5.t0 = _context5["catch"](8);
-                console.log('CatchClause', _context5.t0);
-                console.log('CatchClause', _context5.t0);
-                console.error('验证配送范围失败', _context5.t0);
-                uni.showToast({
-                  title: '验证配送范围失败',
-                  icon: 'none'
-                });
-                return _context5.abrupt("return");
-              case 24:
-                if (!(_this5.paymentMethod === 'paynow')) {
-                  _context5.next = 27;
-                  break;
-                }
-                _this5.setData({ showPaynowPopup: true });
-                return _context5.abrupt("return");
-              case 27:
-                _this5.doSubmitOrder();
-              case 28:
-              case "end":
-                return _context5.stop();
-            }
-          }
-        }, _callee5, null, [[8, 17]]);
-      }))();
+                return;
+              }
+              self.doSubmitOrder();
+            })
+            .catch(function (err) {
+              console.error('验证配送范围失败', err);
+              uni.showToast({ title: '验证配送范围失败', icon: 'none' });
+            });
+          return;
+        }
+      }
+      self.doSubmitOrder();
     },
-    // 关闭 PayNow 弹窗
     closePaynowPopup: function closePaynowPopup() {
       this.setData({ showPaynowPopup: false });
     },
-    // PayNow 弹窗确认
     confirmPaynowOrder: function confirmPaynowOrder() {
       this.setData({ showPaynowPopup: false });
-      this.doSubmitOrder();
+      this.finalizeAfterOrder();
     },
-    // 实际提交订单
     doSubmitOrder: function doSubmitOrder() {
-      var _this6 = this;
-      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee6() {
-        var orderData, _result, pickupCode;
-        return _regenerator.default.wrap(function _callee6$(_context6) {
-          while (1) {
-            switch (_context6.prev = _context6.next) {
-              case 0:
-                _this6.setData({
-                  submitting: true
-                });
-                _context6.prev = 1;
-                orderData = {
-                  guestId: app.globalData.guestId,
-                  orderType: _this6.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
-                  address: _this6.deliveryType === 'delivery' ? _this6.address : '到店自取',
-                  addressId: _this6.deliveryType === 'delivery' && _this6.selectedAddress ? _this6.selectedAddress.id : null,
-                  phone: _this6.deliveryType === 'delivery' && _this6.selectedAddress ? _this6.selectedAddress.phone : '',
-                  remark: _this6.remark,
-                  items: _this6.selectedItems.map(function (item) {
-                    return {
-                      productId: item.id,
-                      quantity: item.quantity,
-                      specs: "".concat(item.specs.sugar, " ").concat(item.specs.temperature, " ").concat(item.specs.addOn)
-                    };
-                  })
-                };
-                _context6.next = 5;
-                return api.createOrder(orderData);
-              case 5:
-                _result = _context6.sent;
-                if (_this6.deliveryType === 'pickup') {
-                  pickupCode = _this6.generatePickupCode();
-                  _this6.setData({
-                    pickupCode: pickupCode
-                  });
-                  uni.showModal({
-                    title: '下单成功',
-                    content: "\u60A8\u7684\u53D6\u9910\u7801\u662F\uFF1A".concat(pickupCode, "\n\u8BF7\u51ED\u6B64\u7801\u5230\u5E97\u53D6\u9910"),
-                    showCancel: false,
-                    success: function success() {
-                      _this6.navigateToOrderList();
-                    }
-                  });
-                } else {
-                  uni.showToast({
-                    title: '订单已创建，待确认付款',
-                    icon: 'success',
-                    duration: 2000
-                  });
-                  setTimeout(function () {
-                    _this6.navigateToOrderList();
-                  }, 2000);
-                }
-                app.globalData.clearCart();
-                _context6.next = 16;
-                break;
-              case 10:
-                _context6.prev = 10;
-                _context6.t0 = _context6["catch"](1);
-                console.log('CatchClause', _context6.t0);
-                console.log('CatchClause', _context6.t0);
-                console.error('提交订单失败', _context6.t0);
-                uni.showToast({
-                  title: '下单失败',
-                  icon: 'none'
-                });
-              case 16:
-                _context6.prev = 16;
-                _this6.setData({
-                  submitting: false
-                });
-                return _context6.finish(16);
-              case 19:
-              case "end":
-                return _context6.stop();
-            }
+      var self = this;
+      self.setData({ submitting: true });
+      var orderData = {
+        guestId: app.globalData.guestId,
+        orderType: self.deliveryType === 'delivery' ? 'takeaway' : 'pickup',
+        address: self.deliveryType === 'delivery' ? self.address : '到店自取',
+        addressId: self.deliveryType === 'delivery' && self.selectedAddress ? self.selectedAddress.id : null,
+        phone: self.deliveryType === 'delivery' && self.selectedAddress ? self.selectedAddress.phone : '',
+        remark: self.remark,
+        items: self.selectedItems.map(function (item) {
+          return {
+            productId: item.id,
+            quantity: item.quantity,
+            specs: item.specs.sugar + ' ' + item.specs.temperature + ' ' + item.specs.addOn
+          };
+        })
+      };
+      api.createOrder(orderData)
+        .then(function (result) {
+          self.setData({ createdOrder: result });
+          if (self.paymentMethod === 'paynow') {
+            self.setData({
+              paynowAmount: result.totalPrice,
+              redPacket: result.redPacket || '0.00',
+              showPaynowPopup: true,
+              submitting: false
+            });
+            return;
           }
-        }, _callee6, null, [[1, 10, 16, 19]]);
-      }))();
+          self.finalizeAfterOrder();
+        })
+        .catch(function (err) {
+          console.error('提交订单失败', err);
+          self.setData({ submitting: false });
+        });
+    },
+    finalizeAfterOrder: function finalizeAfterOrder() {
+      var self = this;
+      try {
+        if (self.deliveryType === 'pickup') {
+          var pickupCode = self.generatePickupCode();
+          self.setData({ pickupCode: pickupCode });
+          uni.showModal({
+            title: '下单成功',
+            content: '您的取餐码是：' + pickupCode + '\n请凭此码到店取餐',
+            showCancel: false,
+            success: function () { self.navigateToOrderList(); }
+          });
+        } else {
+          uni.showToast({
+            title: '订单已创建，待确认付款',
+            icon: 'success',
+            duration: 2000
+          });
+          setTimeout(function () { self.navigateToOrderList(); }, 2000);
+        }
+        app.globalData.clearCart();
+      } finally {
+        self.setData({ submitting: false });
+      }
     },
     // 生成取餐码（6位数字）
     generatePickupCode: function generatePickupCode() {
