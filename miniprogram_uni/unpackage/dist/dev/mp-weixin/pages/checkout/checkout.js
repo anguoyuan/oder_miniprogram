@@ -852,11 +852,36 @@ var _default = {
       self.doSubmitOrder();
     },
     closePaynowPopup: function closePaynowPopup() {
-      this.setData({ showPaynowPopup: false });
+      var self = this;
+      self.setData({ showPaynowPopup: false });
+      // 释放 pending_confirm 占用的唯一金额坑位
+      if (self.createdOrder && self.createdOrder.id) {
+        var orderId = self.createdOrder.id;
+        var guestId = app.globalData.guestId;
+        self.setData({ createdOrder: null });
+        api.cancelPendingOrder(orderId, guestId).catch(function (err) {
+          console.error('取消 pending_confirm 订单失败', err);
+        });
+      }
     },
     confirmPaynowOrder: function confirmPaynowOrder() {
-      this.setData({ showPaynowPopup: false });
-      this.finalizeAfterOrder();
+      var self = this;
+      if (!self.createdOrder || !self.createdOrder.id) {
+        self.setData({ showPaynowPopup: false });
+        self.finalizeAfterOrder();
+        return;
+      }
+      self.setData({ submitting: true });
+      api.confirmOrderPayment(self.createdOrder.id, app.globalData.guestId)
+        .then(function () {
+          self.setData({ showPaynowPopup: false, submitting: false });
+          self.finalizeAfterOrder();
+        })
+        .catch(function (err) {
+          console.error('确认付款失败', err);
+          self.setData({ submitting: false });
+          uni.showToast({ title: '确认失败，请重试', icon: 'none' });
+        });
     },
     doSubmitOrder: function doSubmitOrder() {
       var self = this;
@@ -868,6 +893,7 @@ var _default = {
         addressId: self.deliveryType === 'delivery' && self.selectedAddress ? self.selectedAddress.id : null,
         phone: self.deliveryType === 'delivery' && self.selectedAddress ? self.selectedAddress.phone : '',
         remark: self.remark,
+        paymentMethod: self.paymentMethod,
         items: self.selectedItems.map(function (item) {
           return {
             productId: item.id,
@@ -881,8 +907,8 @@ var _default = {
           self.setData({ createdOrder: result });
           if (self.paymentMethod === 'paynow') {
             self.setData({
-              paynowAmount: result.totalPrice,
-              redPacket: result.redPacket || '0.00',
+              paynowAmount: result.totalPrice || result.total_price,
+              redPacket: result.red_packet || result.redPacket || '0.00',
               showPaynowPopup: true,
               submitting: false
             });

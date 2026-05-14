@@ -7,7 +7,9 @@ const { auth, adminAuth, optionalAuth } = require('../middleware/auth');
 router.post('/create', optionalAuth, OrderController.createOrder);
 router.get('/detail/:orderId', auth, OrderController.getOrderDetail);
 router.get('/user-orders', optionalAuth, OrderController.getUserOrders);
-router.put('/cancel/:orderId', auth, OrderController.cancelOrder);
+router.put('/cancel/:orderId', optionalAuth, OrderController.cancelOrder);
+router.put('/confirm-payment/:orderId', optionalAuth, OrderController.confirmPayment);
+router.put('/cancel-pending/:orderId', optionalAuth, OrderController.cancelPendingOrder);
 
 // 管理端接口
 router.get('/all', adminAuth, OrderController.getAllOrders);

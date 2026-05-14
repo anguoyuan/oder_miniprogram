@@ -12374,10 +12374,24 @@ function getUserOrders(params) {
 }
 
 /**
- * 取消订单
+ * 取消订单（游客需要传 guestId 以便后端通过 optionalAuth 兜底获取 user_id）
  */
-function cancelOrder(orderId) {
-  return request.put("/order/cancel/".concat(orderId));
+function cancelOrder(orderId, guestId) {
+  return request.put("/order/cancel/".concat(orderId), { guestId: guestId });
+}
+
+/**
+ * 用户点 "I have paid"：把 pending_confirm 翻成 unpaid，开启 nanobot 对账
+ */
+function confirmOrderPayment(orderId, guestId) {
+  return request.put("/order/confirm-payment/".concat(orderId), { guestId: guestId });
+}
+
+/**
+ * 关闭 PayNow 弹窗：取消 pending_confirm 订单，释放金额坑位
+ */
+function cancelPendingOrder(orderId, guestId) {
+  return request.put("/order/cancel-pending/".concat(orderId), { guestId: guestId });
 }
 
 // ==================== 收藏相关 ====================
@@ -12518,6 +12532,8 @@ module.exports = {
   getOrderDetail: getOrderDetail,
   getUserOrders: getUserOrders,
   cancelOrder: cancelOrder,
+  confirmOrderPayment: confirmOrderPayment,
+  cancelPendingOrder: cancelPendingOrder,
   addFavorite: addFavorite,
   removeFavorite: removeFavorite,
   getFavorites: getFavorites,

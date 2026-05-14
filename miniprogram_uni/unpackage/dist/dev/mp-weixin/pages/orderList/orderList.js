@@ -451,7 +451,7 @@ var _default = {
                       title: '处理中...'
                     });
                     _context3.next = 5;
-                    return api.cancelOrder(orderId);
+                    return api.cancelOrder(orderId, app.globalData.guestId);
                   case 5:
                     uni.hideLoading();
                     uni.showToast({

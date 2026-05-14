@@ -9,7 +9,7 @@ class OrderController {
   static async createOrder(req, res) {
     try {
       let userId = req.userId;
-      const { items, orderType, remark, address, phone, totalPrice, guestId } = req.body;
+      const { items, orderType, remark, address, phone, totalPrice, guestId, paymentMethod } = req.body;
 
       // 兜底：若 token 和 body guestId 都没给，生成一个匿名ID，避免 user_id 为 null
       if (!userId) {
@@ -54,7 +54,8 @@ class OrderController {
           orderType: orderType || 'takeaway',
           remark: remark || null,
           address: address || null,
-          phone: phone || null
+          phone: phone || null,
+          paymentMethod: paymentMethod || null
         });
       } catch (e) {
         if (e && e.code === 'REDUCTION_CAP_EXCEEDED') {
@@ -213,6 +214,51 @@ class OrderController {
     } catch (err) {
       console.error('更新付款状态失败:', err);
       res.json(error(err.message || '更新付款状态失败'));
+    }
+  }
+
+  /**
+   * 用户在 PayNow 弹窗点击 "I have paid"：将 pending_confirm 翻成 unpaid，
+   * 让 nanobot 开始扫银行流水匹配该订单。
+   */
+  static async confirmPayment(req, res) {
+    try {
+      const { orderId } = req.params;
+      const { guestId } = req.body || {};
+      const userId = req.userId || guestId;
+      if (!userId) {
+        return res.json(error('缺少用户身份'));
+      }
+      const ok = await OrderModel.confirmPayment(orderId, userId);
+      if (!ok) {
+        return res.json(error('订单不存在或状态不可确认'));
+      }
+      res.json(success(null, '已确认付款，等待对账'));
+    } catch (err) {
+      console.error('确认付款失败:', err);
+      res.json(error(err.message || '确认付款失败'));
+    }
+  }
+
+  /**
+   * 用户关闭 PayNow 弹窗：取消 pending_confirm 订单，释放唯一金额坑位。
+   */
+  static async cancelPendingOrder(req, res) {
+    try {
+      const { orderId } = req.params;
+      const { guestId } = req.body || {};
+      const userId = req.userId || guestId;
+      if (!userId) {
+        return res.json(error('缺少用户身份'));
+      }
+      const ok = await OrderModel.cancelPending(orderId, userId);
+      if (!ok) {
+        return res.json(error('订单不存在或状态不可取消'));
+      }
+      res.json(success(null, '已取消'));
+    } catch (err) {
+      console.error('取消未确认订单失败:', err);
+      res.json(error(err.message || '取消未确认订单失败'));
     }
   }
 

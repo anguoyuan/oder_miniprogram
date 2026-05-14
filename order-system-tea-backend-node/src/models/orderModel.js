@@ -13,16 +13,21 @@ class OrderModel {
   /**
    * 创建订单
    *
-   * 红包/去重：若 5 分钟内已有 unpaid 订单 total_price 与本单相同，自动减 0.10
-   * 直至无冲突；最多减 RED_PACKET_MAX_STEPS 次。到达上限仍冲突则抛
+   * 红包/去重：若 5 分钟内已有 unpaid 或 pending_confirm 订单 total_price 与本单相同，
+   * 自动减 0.10 直至无冲突；最多减 RED_PACKET_MAX_STEPS 次。到达上限仍冲突则抛
    * REDUCTION_CAP_EXCEEDED，由 controller 转成"系统繁忙"提示。整个过程在事务里
    * 并 SELECT ... FOR UPDATE，避免并发同金额订单同时拿到相同折扣。
+   *
+   * paymentMethod === 'paynow' 时订单初始 payment_status='pending_confirm'，
+   * 占用唯一金额坑位但 nanobot 不会对账。用户点击 "I have paid" 后由 confirmPayment()
+   * 翻成 'unpaid' 才进入 nanobot 视野；关闭弹窗 → cancelPending() 翻成 'cancelled'。
    */
   static async create(order) {
     const orderNo = this.generateOrderNo();
     const RED_PACKET_MAX_STEPS = 20;
     const STEP_CENTS = 10;
     const originalCents = Math.round(parseFloat(order.totalPrice) * 100);
+    const initialPaymentStatus = order.paymentMethod === 'paynow' ? 'pending_confirm' : 'unpaid';
 
     const conn = await pool.getConnection();
     try {
@@ -32,7 +37,7 @@ class OrderModel {
       for (let i = 0; i <= RED_PACKET_MAX_STEPS; i++) {
         const [rows] = await conn.execute(
           `SELECT id FROM orders
-             WHERE payment_status = 'unpaid'
+             WHERE payment_status IN ('unpaid', 'pending_confirm')
                AND ROUND(total_price * 100) = ?
                AND create_time >= NOW() - INTERVAL 5 MINUTE
              FOR UPDATE`,
@@ -56,7 +61,7 @@ class OrderModel {
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         params = [
           orderNo, order.userId, adjustedPrice, order.orderType || 'takeaway',
-          'pending', 'unpaid', order.remark || null, order.address || null,
+          'pending', initialPaymentStatus, order.remark || null, order.address || null,
           order.phone || null, order.addressId
         ];
       } else {
@@ -64,7 +69,7 @@ class OrderModel {
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         params = [
           orderNo, order.userId, adjustedPrice, order.orderType || 'takeaway',
-          'pending', 'unpaid', order.remark || null, order.address || null,
+          'pending', initialPaymentStatus, order.remark || null, order.address || null,
           order.phone || null
         ];
       }
@@ -149,8 +154,9 @@ class OrderModel {
     const { limit, offset } = normalizePagination(page, pageSize);
     
     // 直接拼接SQL（参数已经过类型转换，安全）
-    let sql = `SELECT * FROM orders WHERE user_id = ${userId}`;
-    let countSql = `SELECT COUNT(*) as total FROM orders WHERE user_id = ${userId}`;
+    // pending_confirm 是 PayNow 弹窗未确认前的预占状态，不展示给用户
+    let sql = `SELECT * FROM orders WHERE user_id = ${userId} AND payment_status != 'pending_confirm'`;
+    let countSql = `SELECT COUNT(*) as total FROM orders WHERE user_id = ${userId} AND payment_status != 'pending_confirm'`;
     
     if (status) {
       const safeStatus = pool.escape(status);
@@ -254,6 +260,53 @@ class OrderModel {
       [orderId, userId]
     );
     return result.affectedRows > 0;
+  }
+
+  /**
+   * 用户点击 "I have paid" 后，将 pending_confirm 翻成 unpaid，让 nanobot 开始对账。
+   */
+  static async confirmPayment(orderId, userId) {
+    const [result] = await pool.execute(
+      `UPDATE orders SET payment_status = 'unpaid'
+         WHERE id = ? AND user_id = ? AND payment_status = 'pending_confirm'`,
+      [orderId, userId]
+    );
+    return result.affectedRows > 0;
+  }
+
+  /**
+   * 用户关闭 PayNow 弹窗 / 放弃支付：直接 DELETE 这条 pending_confirm 订单
+   * 及其 order_item，从用户视角看就像从未下过单。事务里 SELECT ... FOR UPDATE
+   * 防止与并发 confirmPayment 抢同一条记录。
+   */
+  static async cancelPending(orderId, userId) {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [rows] = await conn.execute(
+        `SELECT id FROM orders
+           WHERE id = ? AND user_id = ? AND payment_status = 'pending_confirm'
+           FOR UPDATE`,
+        [orderId, userId]
+      );
+      if (rows.length === 0) {
+        await conn.rollback();
+        return false;
+      }
+      await conn.execute('DELETE FROM order_item WHERE order_id = ?', [orderId]);
+      const [result] = await conn.execute(
+        `DELETE FROM orders
+           WHERE id = ? AND user_id = ? AND payment_status = 'pending_confirm'`,
+        [orderId, userId]
+      );
+      await conn.commit();
+      return result.affectedRows > 0;
+    } catch (e) {
+      try { await conn.rollback(); } catch (_) { /* already rolled back */ }
+      throw e;
+    } finally {
+      conn.release();
+    }
   }
   
   /**
