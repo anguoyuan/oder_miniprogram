@@ -1,1 +1,625 @@
-.order-list-container{background-color:#f8f8f8;min-height:100vh}.page-header{background-color:#fff;padding:0 30rpx 0;border-bottom:1rpx solid #e8e8e8}.page-title{font-size:44rpx;font-weight:700;color:#000;letter-spacing:2rpx;display:block;margin-bottom:24rpx}.main-content{padding-top:0;padding-bottom:20rpx}.tab-section{display:flex;background-color:#fff}.tab-item{padding:16rpx 24rpx;font-size:26rpx;color:#999;border-bottom:4rpx solid transparent;transition:all .2s ease}.tab-item.active{color:#5d3a1a;font-weight:700;border-bottom:4rpx solid #5d3a1a}.payment-unpaid{color:#ff9800;background-color:#fff3e0}.payment-paid{color:#2e7d32;background-color:#e8f5e9}.status-pending{color:#ff9800;background-color:#fff3e0}.status-preparing{color:#2196f3;background-color:#e3f2fd}.status-ready{color:#4caf50;background-color:#e8f5e9}.status-completed{color:#9e9e9e;background-color:#f5f5f5}.status-cancelled{color:#f44336;background-color:#ffebee}.order-content{padding:0 20rpx}.order-item{margin-bottom:30rpx;padding:30rpx}.order-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20rpx;padding-bottom:20rpx;border-bottom:1rpx solid #f0f0f0}.order-id{font-size:28rpx;color:#333;font-weight:700}.order-status{padding:8rpx 16rpx;border-radius:20rpx;font-size:24rpx;font-weight:700}.order-status.pending{background-color:#fff3cd;color:#856404}.order-status.preparing{background-color:#d4edda;color:#155724}.order-status.ready{background-color:#cce5ff;color:#004085}.order-status.completed{background-color:#d1ecf1;color:#0c5460}.order-status.cancelled{background-color:#f8d7da;color:#721c24}.order-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:20rpx}.order-type{font-size:26rpx;color:#666}.order-time{font-size:24rpx;color:#999}.order-items{margin-bottom:20rpx}.order-product{display:flex;align-items:center;padding:15rpx 0;border-bottom:1rpx solid #f5f5f5}.order-product:last-child{border-bottom:none}.product-image{width:80rpx;height:80rpx;border-radius:8rpx;margin-right:20rpx}.product-info{flex:1}.product-name{font-size:26rpx;color:#333;font-weight:700;margin-bottom:8rpx;display:block}.product-specs{font-size:22rpx;color:#999;margin-bottom:8rpx;display:block}.product-bottom{display:flex;justify-content:space-between;align-items:center}.product-price{font-size:26rpx;color:#aad08f;font-weight:700}.product-quantity{font-size:24rpx;color:#666}.order-footer{display:flex;justify-content:space-between;align-items:center;padding-top:20rpx;border-top:1rpx solid #f0f0f0}.order-total{font-size:32rpx;color:#333;font-weight:700}.order-actions{display:flex;gap:20rpx}.action-btn{padding:16rpx 32rpx;border-radius:50rpx;font-size:24rpx;text-align:center;transition:all .3s ease}.cancel-btn{background-color:#f8f8f8;color:#666;border:1rpx solid #e0e0e0}.review-btn{background:linear-gradient(135deg,#ffb74d,#ffa726);color:#fff}.reorder-btn{background:linear-gradient(135deg,#aad08f,#8bc34a);color:#fff}.action-btn:active{-webkit-transform:scale(.95);transform:scale(.95)}.empty-state{text-align:center;padding:100rpx 20rpx}.empty-image{width:200rpx;height:200rpx;margin-bottom:30rpx;opacity:.5}.empty-text{font-size:28rpx;color:#999;margin-bottom:40rpx;display:block}.go-order-btn{background-color:#5d3a1a;color:#fff;border-radius:0;padding:20rpx 60rpx;font-size:28rpx;font-weight:700;display:inline-block;transition:all .3s ease}.go-order-btn:active{-webkit-transform:scale(.95);transform:scale(.95)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* pages/orderList/orderList.wxss */
+.order-list-container {
+    background-color: #f8f8f8;
+    min-height: 100vh;
+}
+.page-header {
+    background-color: #ffffff;
+    padding: 0 30rpx 0;
+    border-bottom: 1rpx solid #e8e8e8;
+}
+.page-title {
+    font-size: 44rpx;
+    font-weight: bold;
+    color: #000000;
+    letter-spacing: 2rpx;
+    display: block;
+    margin-bottom: 24rpx;
+}
+.main-content {
+    padding-top: 0;
+    padding-bottom: 20rpx;
+}
+/* 切换标签 */
+.tab-section {
+    display: flex;
+    background-color: #fff;
+}
+.tab-item {
+    padding: 16rpx 24rpx;
+    font-size: 26rpx;
+    color: #999;
+    border-bottom: 4rpx solid transparent;
+    transition: all 0.2s ease;
+}
+.tab-item.active {
+    color: #5D3A1A;
+    font-weight: bold;
+    border-bottom: 4rpx solid #5D3A1A;
+}
+/* 付款状态样式 */
+.payment-unpaid {
+    color: #ff9800;
+    background-color: #fff3e0;
+}
+.payment-paid {
+    color: #2e7d32;
+    background-color: #e8f5e9;
+}
+.payment-cancelled {
+    color: #9e9e9e;
+    background-color: #f5f5f5;
+    text-decoration: line-through;
+}
+/* 订单状态样式 */
+.status-pending {
+    color: #ff9800;
+    background-color: #fff3e0;
+}
+.status-preparing {
+    color: #2196f3;
+    background-color: #e3f2fd;
+}
+.status-ready {
+    color: #4caf50;
+    background-color: #e8f5e9;
+}
+.status-completed {
+    color: #9e9e9e;
+    background-color: #f5f5f5;
+}
+.status-cancelled {
+    color: #f44336;
+    background-color: #ffebee;
+}
+/* 订单内容 */
+.order-content {
+    padding: 0 20rpx;
+}
+.order-item {
+    margin-bottom: 30rpx;
+    padding: 30rpx;
+}
+/* 订单头部 */
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20rpx;
+    padding-bottom: 20rpx;
+    border-bottom: 1rpx solid #f0f0f0;
+}
+.order-id {
+    font-size: 28rpx;
+    color: #333;
+    font-weight: bold;
+}
+.order-status {
+    padding: 8rpx 16rpx;
+    border-radius: 20rpx;
+    font-size: 24rpx;
+    font-weight: bold;
+}
+.order-status.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+.order-status.preparing {
+    background-color: #d4edda;
+    color: #155724;
+}
+.order-status.ready {
+    background-color: #cce5ff;
+    color: #004085;
+}
+.order-status.completed {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+.order-status.cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+/* 订单信息 */
+.order-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20rpx;
+}
+.order-type {
+    font-size: 26rpx;
+    color: #666;
+}
+.order-time {
+    font-size: 24rpx;
+    color: #999;
+}
+/* 订单商品 */
+.order-items {
+    margin-bottom: 20rpx;
+}
+.order-product {
+    display: flex;
+    align-items: center;
+    padding: 15rpx 0;
+    border-bottom: 1rpx solid #f5f5f5;
+}
+.order-product:last-child {
+    border-bottom: none;
+}
+.product-image {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 8rpx;
+    margin-right: 20rpx;
+}
+.product-info {
+    flex: 1;
+}
+.product-name {
+    font-size: 26rpx;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 8rpx;
+    display: block;
+}
+.product-specs {
+    font-size: 22rpx;
+    color: #999;
+    margin-bottom: 8rpx;
+    display: block;
+}
+.product-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.product-price {
+    font-size: 26rpx;
+    color: #aad08f;
+    font-weight: bold;
+}
+.product-quantity {
+    font-size: 24rpx;
+    color: #666;
+}
+/* 订单底部 */
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20rpx;
+    border-top: 1rpx solid #f0f0f0;
+}
+.order-total {
+    font-size: 32rpx;
+    color: #333;
+    font-weight: bold;
+}
+.order-actions {
+    display: flex;
+    gap: 20rpx;
+}
+.action-btn {
+    padding: 16rpx 32rpx;
+    border-radius: 50rpx;
+    font-size: 24rpx;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+.cancel-btn {
+    background-color: #f8f8f8;
+    color: #666;
+    border: 1rpx solid #e0e0e0;
+}
+.review-btn {
+    background: linear-gradient(135deg, #ffb74d 0%, #ffa726 100%);
+    color: #fff;
+}
+.reorder-btn {
+    background: linear-gradient(135deg, #aad08f 0%, #8bc34a 100%);
+    color: #fff;
+}
+.action-btn:active {
+    -webkit-transform: scale(0.95);
+            transform: scale(0.95);
+}
+/* 空状态 */
+.empty-state {
+    text-align: center;
+    padding: 100rpx 20rpx;
+}
+.empty-image {
+    width: 200rpx;
+    height: 200rpx;
+    margin-bottom: 30rpx;
+    opacity: 0.5;
+}
+.empty-text {
+    font-size: 28rpx;
+    color: #999;
+    margin-bottom: 40rpx;
+    display: block;
+}
+.go-order-btn {
+    background-color: #5D3A1A;
+    color: #fff;
+    border-radius: 0;
+    padding: 20rpx 60rpx;
+    font-size: 28rpx;
+    font-weight: bold;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+.go-order-btn:active {
+    -webkit-transform: scale(0.95);
+            transform: scale(0.95);
+}
+
